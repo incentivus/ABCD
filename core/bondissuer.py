@@ -1,8 +1,8 @@
 from typing import Tuple
 
-from participant import *
-from config import *
-from scripts import *
+from core.participant import *
+from core.config import *
+from core.scripts import *
 
 
 class BondIssuer(Participant):
@@ -20,21 +20,21 @@ class BondIssuer(Participant):
         super().__init__(**kwargs)
         self.funding_secret = funding_secret
 
-    def make_alice_refund_tx(self,
-                             funding_utxo: UTXO,
-                             network: str = "btc-test3",
-                             fee: int = DEFAULT_TX_FEE
-                             ) -> Transaction:
-        amount_to_send = funding_utxo.value - fee
-        txout = TxOutput(
-            amount_to_send,
-            self.p2pkh_script_pubkey(network=network)
-        )
-        txin = funding_utxo.create_tx_in()
-        transaction = Transaction([txin], [txout], has_segwit=True)
-        self.refund_tx = transaction
-
-        return self.refund_tx
+    # def make_alice_refund_tx(self,
+    #                          funding_utxo: UTXO,
+    #                          network: str = "btc-test3",
+    #                          fee: int = DEFAULT_TX_FEE
+    #                          ) -> Transaction:
+    #     amount_to_send = funding_utxo.value - fee
+    #     txout = TxOutput(
+    #         amount_to_send,
+    #         self.p2pkh_script_pubkey(network=network)
+    #     )
+    #     txin = funding_utxo.create_tx_in()
+    #     transaction = Transaction([txin], [txout], has_segwit=True)
+    #     self.refund_tx = transaction
+    #
+    #     return self.refund_tx
 
     def make_alice_funding_tx(
             self,
@@ -48,13 +48,13 @@ class BondIssuer(Participant):
             sender_pubkey=self.public_key,
             recipient_pubkey=recipient_pubkey,
             secret=self.funding_secret.digest_hex(),
-            locktime=alice_funding_locktime
+            locktime=alice_refund_locktime
         )
         txout = TxOutput(
             amount_to_send,
             txout_script.to_p2wsh_script_pub_key()
         )
-        txin = utxo.create_tx_in()
+        txin = utxo.create_tx_in(sequence=(2**32-1).to_bytes(4,"little"))
 
         transaction = new_tx([txin], [txout], has_segwit=True)
         new_utxo = UTXO(
@@ -107,6 +107,7 @@ class BondIssuer(Participant):
             self,
             recipient_pubkeyhash: str,
             bob_principal_utxo: UTXO,
+            # secret: str,
             utxo: UTXO,
             locktime: int,
             fee: int = DEFAULT_TX_FEE,
@@ -116,6 +117,7 @@ class BondIssuer(Participant):
             sender_address=self.pubkey_hash(network="btc-test3"),
             recipient_address=recipient_pubkeyhash,
             secret_hash=bob_principal_utxo.redeem_script.script[11],
+            # secret_hash=secret,
             locktime=locktime,
         )
 
@@ -161,16 +163,6 @@ class BondIssuer(Participant):
         )
         self.funding_tx = Transaction.copy(self.funding_tx)
         self.funding_ser = self.funding_tx.serialize()
-
-    def commit_refund(self,
-                      alice_sig: str,
-                      funding_utxo: UTXO):
-        self.refund_tx.witnesses.append(
-            Script([alice_sig, self.public_key.to_hex(), 1, funding_utxo.redeem_script.to_hex()])
-        )
-        self.refund_tx = Transaction.copy(self.refund_tx)
-        self.refund_ser = self.refund_tx.serialize()
-        print("Alice refund transaction created.")
 
     def commit_premium_dep(self, alice_sig, bob_sig, alice_funding_script):
         self.premium_dep_tx.witnesses.append(

@@ -3,25 +3,36 @@ from typing import cast
 import requests
 from bitcoinutils.keys import *
 
-from config import DEFAULT_TX_FEE
-from secret import Secret
-from utxo import *
+from core.config import DEFAULT_TX_FEE
+from core.secret import Secret, int_to_le_hex
+from core.utxo import *
 
 
 def broadcast_transaction(raw_transaction, network):
     if network == 'btc-test3':
-        url = 'https://api.blockcypher.com/v1/btc/test3/txs/push'
+        # headers = {'content-type': 'application/x-www-form-urlencoded'}
+        # url = 'https://api.blockcypher.com/v1/btc/test3/txs/push'
+        # data = '{"tx": "%s"}' % raw_transaction
+
         # url = 'https://testnet-api.smartbit.com.au/v1/blockchain/pushtx'
+        # data = '{"hex": "%s"}' % raw_transaction
+
+        url = 'https://api.cryptoapis.io/v1/bc/btc/testnet/txs/send/'
+        headers = {'Content-Type': 'application/json', 'X-API-Key': 'c186f1a43625f540e474a1653f4e5ccfe6003c3a'}
+        data = '{"hex": "%s"}' % raw_transaction
+
     elif network == 'bcy-tst':
+        headers = {'content-type': 'application/x-www-form-urlencoded'}
         url = 'https://api.blockcypher.com/v1/bcy/test/txs/push'
+        data = '{"tx": "%s"}' % raw_transaction
+
     else:
         raise ValueError("Network must be one of 'btc-test3', 'bcy-tst'")
 
-    headers = {'content-type': 'application/x-www-form-urlencoded'}
     return requests.post(
         url,
         headers=headers,
-        data='{"tx": "%s"}' % raw_transaction)
+        data=data)
 
 
 class Participant:
@@ -110,6 +121,33 @@ class Participant:
     ):
         pass
 
+    def make_second_HTLC_output_tx(
+            self,
+            utxo: UTXO,
+            fee: int = DEFAULT_TX_FEE,
+            network: str = "bcy-tst"
+    ) -> Transaction:
+        amount_to_send = utxo.value - fee
+        txin = utxo.create_tx_in()
+        txout = TxOutput(
+            amount_to_send,
+            self.p2pkh_script_pubkey(network=network)
+        )
+
+        self.second_HTLC_output_tx = new_tx([txin], [txout])
+
+        print("HTLC output transaction made. TXID:", self.second_HTLC_output_tx.get_txid())
+        return self.second_HTLC_output_tx
+
+    def commit_second_HTLC_output(self, sig: str, network="btc-test3"):
+        self.second_HTLC_output_tx.inputs[0].script_sig = Script([
+            sig,
+            self.public_key.to_hex() if network == "btc-test3" else self.public_key_BCY.to_hex(),
+            'OP_1'
+        ])
+        self.second_HTLC_output_tx = Transaction.copy(self.second_HTLC_output_tx)
+        self.second_HTLC_output_ser = self.second_HTLC_output_tx.serialize()
+
     def make_HTLC_output_tx(
             self,
             utxo: UTXO,
@@ -145,4 +183,69 @@ class Participant:
         else:
             print(self.name, "failed to broadcast", transaction_name)
             print(response.text)
+
+    def make_defaults_tx(self,
+                         prev_utxo: UTXO,
+                         network: str = "btc-test3",
+                         fee: int = int(DEFAULT_TX_FEE*2/3)
+                         ) -> Transaction:
+        amount_to_send = prev_utxo.value - fee
+        txout = TxOutput(
+            amount_to_send,
+            self.p2pkh_script_pubkey(network=network)
+        )
+        txin = prev_utxo.create_tx_in()
+        transaction = Transaction([txin], [txout], has_segwit=True)
+        self.defaults_tx = transaction
+
+        return self.defaults_tx
+
+    def make_refund_tx(self,
+                       locktime: int,
+                       funding_utxo: UTXO,
+                       network: str = "btc-test3",
+                       fee: int = DEFAULT_TX_FEE,
+                       ) -> Transaction:
+        amount_to_send = funding_utxo.value - fee
+        txout = TxOutput(
+            amount_to_send,
+            self.p2pkh_script_pubkey(network=network)
+        )
+        txin = funding_utxo.create_tx_in(sequence=(2**32-1).to_bytes(4, "little"))
+        transaction = new_tx([txin], [txout], has_segwit=True, locktime=(locktime-10).to_bytes(4, "little"))
+        self.refund_tx = transaction
+
+        return self.refund_tx
+
+    def commit_refund(self,
+                      sig: str,
+                      funding_script: hex,
+                      network="btc-test3"):
+        if network == "btc-test3":
+            self.refund_tx.witnesses.append(
+                Script([sig, self.public_key.to_hex(), self.public_key.to_hex(), funding_script])
+            )
+        elif network == "bcy-tst":
+            self.refund_tx.witnesses.append(
+                Script([sig, self.public_key_BCY.to_hex(), self.public_key_BCY.to_hex(), funding_script])
+            )
+        self.refund_tx = Transaction.copy(self.refund_tx)
+        self.refund_ser = self.refund_tx.serialize()
+        print(self.name, "refund transaction created.")
+
+    def commit_defaults(self,
+                      sig: str,
+                      prev_script: hex,
+                      network="btc-test3"):
+        if network == "btc-test3":
+            self.defaults_tx.witnesses.append(
+                Script([sig, self.public_key.to_hex(), self.public_key.to_hex(), prev_script])
+            )
+        elif network == "bcy-tst":
+            self.refund_tx.witnesses.append(
+                Script([sig, self.public_key_BCY.to_hex(), self.public_key_BCY.to_hex(), prev_script])
+            )
+        self.defaults_tx = Transaction.copy(self.defaults_tx)
+        self.defaults_ser = self.defaults_tx.serialize()
+        print(self.name, "created other party's defaults transaction.")
 

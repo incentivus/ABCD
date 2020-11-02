@@ -36,5 +36,5 @@ class UTXO:
         self.redeem_script = \
             None if redeem_script is None else Script.copy(redeem_script)
 
-    def create_tx_in(self) -> TxInput:
-        return TxInput(self.txid, self.output_idx)
+    def create_tx_in(self, **kwargs) -> TxInput:
+        return TxInput(self.txid, self.output_idx, **kwargs)

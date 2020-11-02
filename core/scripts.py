@@ -1,5 +1,5 @@
-from participant import *
-from secret import *
+from core.participant import *
+from core.secret import *
 
 
 # def redemption_script(
@@ -70,7 +70,9 @@ def funding_script(
         locktime: int,
 ) -> Script:
     return Script([
-        'OP_IF',
+        'OP_0',
+        'OP_EQUAL',
+        'OP_NOTIF',
         int_to_le_hex(locktime),
         'OP_CHECKLOCKTIMEVERIFY',
         'OP_DROP',
@@ -103,7 +105,9 @@ def premium_dep_script(
         locktime: int
 ) -> Script:
     return Script([
-        'OP_IF',
+        'OP_0',
+        'OP_EQUAL',
+        'OP_NOTIF',
         int_to_le_hex(locktime),
         'OP_CHECKLOCKTIMEVERIFY',
         'OP_DROP',

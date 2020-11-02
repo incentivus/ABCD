@@ -6,13 +6,13 @@ from bitcoinutils.setup import setup
 from bitcoinutils.transactions import TxOutput, Transaction, TxInput
 from bitcoinutils.utils import to_satoshis
 
-from bondissuer import BondIssuer
-from config import DEFAULT_TX_FEE
-from exchange import Exchange
-from participant import Participant
-from scripts import HTLC_script
-from secret import Secret
-from utxo import UTXO
+from core.bondissuer import BondIssuer
+from core.config import DEFAULT_TX_FEE
+from core.exchange import Exchange
+from core.participant import Participant
+from core.scripts import HTLC_script
+from core.secret import Secret
+from core.utxo import UTXO
 
 BOB_SECRET = Secret("thisIsASecretPasswordForBob")
 ALICE_SECRET = Secret("thisIsASecretPasswordForAlice")
@@ -56,3 +56,12 @@ class TestExchange(TestCase):
         print(CAROL.HTLC_ser)
         print(ALICE.HTLC_output_ser)
 
+
+
+# curl -X POST \
+#   https://api.cryptoapis.io/v1/bc/btc/testnet/txs/send/ \
+#   -H 'Content-Type: application/json' \
+#   -H 'X-API-Key: c186f1a43625f540e474a1653f4e5ccfe6003c3a' \
+#   -d '{
+#     "hex" : "02000000012ef6ff4aaa76aaff4bea235df134923a830a89d2fbdea5fdc330c9a42eb920a8010000006a47304402205c44fb58b3eaa907cccb2cac87749f00cb52f0d050d183ebba80d672413b9a540220749c8b53665db9f36d5e760ad627b0e22072a6cf91a5d77d35ac2b95d4c1ea54012102275753690ab58df3c923001e94d407e30b03e60b1f2461729a1dd4f37ebe2469ffffffff02c8320000000000001976a914481e003d23566c1789dc9362085c3a0876570c7c88ac80380100000000001976a9147b9a627a184897f10d31d73d87c2eea191d8f50188ac00000000"
+#   }'

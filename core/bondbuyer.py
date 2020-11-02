@@ -1,7 +1,7 @@
 from typing import Tuple
 
-from config import *
-from scripts import *
+from core.config import *
+from core.scripts import *
 
 
 class BondBuyer(Participant):
@@ -30,8 +30,8 @@ class BondBuyer(Participant):
             sender_address=self.pubkey_hash(),
             sender_pubkey=self.public_key,
             recipient_pubkey=recipient_pubkey,
-            secret=alice_funding_utxo.redeem_script.script[11],
-            locktime=bob_funding_locktime
+            secret=alice_funding_utxo.redeem_script.script[13],
+            locktime=bob_refund_locktime
         )
         txout = TxOutput(amount_to_send, txout_script.to_p2wsh_script_pub_key())
         txin = utxo.create_tx_in()
@@ -54,7 +54,7 @@ class BondBuyer(Participant):
             recipient_pubkey: PublicKey,
             recipient_pubkeyhash: str,
             utxo: UTXO,
-            locktime: int = bob_principal_locktime,
+            locktime: int = bob_principal_deposit_locktime,
             fee: int = DEFAULT_TX_FEE,
     ) -> Tuple[Transaction, UTXO]:
         amount_to_send = utxo.value - fee
@@ -152,7 +152,7 @@ class BondBuyer(Participant):
                 'OP_FALSE',
                 bob_sig,
                 alice_sig,
-                funding_secret.hex(),
+                funding_secret.hex(),  # todo: needs to get it from Alice
                 'OP_FALSE',
                 bob_funding_script
             ]))
@@ -174,4 +174,5 @@ class BondBuyer(Participant):
             Script([bob_sig_ff, self.public_key.to_hex()])
         )
         self.principal_tx = Transaction.copy(self.principal_tx)
+        print(self.principal_tx.get_txid())
         self.principal_ser = self.principal_tx.serialize()

@@ -2,12 +2,12 @@ from typing import Tuple
 
 from bitcoinutils.utils import to_satoshis
 
-from bondissuer import BondIssuer
-from config import DEFAULT_TX_FEE
-from participant import *
+from core.bondissuer import BondIssuer
+from core.config import DEFAULT_TX_FEE
+from core.participant import *
 from bitcoinutils.setup import setup
 
-from scripts import *
+from core.scripts import *
 
 utxos = [
     "5ff91695b039a7f38b70b65e0f371156f7394051de235335b1e5cc821ec5c74a",
