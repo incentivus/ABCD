@@ -7,7 +7,8 @@ from core.config import DEFAULT_TX_FEE
 from core.secret import Secret, int_to_le_hex
 from core.utxo import *
 import websockets
-from test.webapp import *
+from website.webapp import *
+
 
 def broadcast_transaction(raw_transaction, network):
     if network == 'btc-test3':
@@ -127,17 +128,18 @@ class Participant:
     def make_second_HTLC_output_tx(
             self,
             utxo: UTXO,
+            locktime: int,
             fee: int = DEFAULT_TX_FEE,
             network: str = "bcy-tst"
     ) -> Transaction:
         amount_to_send = utxo.value - fee
-        txin = utxo.create_tx_in()
+        txin = utxo.create_tx_in(sequence=0xFFFFFFFE.to_bytes(4, "little"))
         txout = TxOutput(
             amount_to_send,
             self.p2pkh_script_pubkey(network=network)
         )
 
-        self.second_HTLC_output_tx = new_tx([txin], [txout])
+        self.second_HTLC_output_tx = new_tx([txin], [txout], locktime=locktime.to_bytes(4, "little"))
 
         print("HTLC output transaction made. TXID:", self.second_HTLC_output_tx.get_txid())
         return self.second_HTLC_output_tx
@@ -198,16 +200,17 @@ class Participant:
 
     def make_defaults_tx(self,
                          prev_utxo: UTXO,
+                         locktime: int,
                          network: str = "btc-test3",
-                         fee: int = int(DEFAULT_TX_FEE*2/3)
+                         fee: int = int(DEFAULT_TX_FEE*2/3),
                          ) -> Transaction:
         amount_to_send = prev_utxo.value - fee
         txout = TxOutput(
             amount_to_send,
             self.p2pkh_script_pubkey(network=network)
         )
-        txin = prev_utxo.create_tx_in()
-        transaction = Transaction([txin], [txout], has_segwit=True)
+        txin = prev_utxo.create_tx_in(sequence=0xFFFFFFFE.to_bytes(4, "little"))
+        transaction = Transaction([txin], [txout], has_segwit=True, locktime=locktime.to_bytes(4, "little"))
         self.defaults_tx = transaction
 
         return self.defaults_tx
@@ -223,8 +226,8 @@ class Participant:
             amount_to_send,
             self.p2pkh_script_pubkey(network=network)
         )
-        txin = funding_utxo.create_tx_in(sequence=(2**32-1).to_bytes(4, "little"))
-        transaction = new_tx([txin], [txout], has_segwit=True, locktime=(locktime-10).to_bytes(4, "little"))
+        txin = funding_utxo.create_tx_in(sequence=0xFFFFFFFE.to_bytes(4, "little"))
+        transaction = new_tx([txin], [txout], has_segwit=True, locktime=locktime.to_bytes(4, "little"))
         self.refund_tx = transaction
 
         return self.refund_tx

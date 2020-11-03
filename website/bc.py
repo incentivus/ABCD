@@ -1,7 +1,7 @@
 from core.bondbuyer import *
 from core.bondissuer import *
 from core.exchange import *
-from webapp.webapp import *
+from website.webapp import *
 import asyncio
 
 
@@ -141,6 +141,7 @@ async def main():
             recipient_pubkeyhash=BOB.pubkey_hash(),
             utxo=alice_funding_utxo,
             fee=DEFAULT_TX_FEE,
+            locktime=alice_defaults_locktime
         )
     await ALICE.new_message("Premium deposition transaction is created.")
     # Bob signs premium dep
@@ -162,7 +163,7 @@ async def main():
 
     ################################ Alice defaults section ##################################
     # Bob creates alice defaults
-    alice_defaults_tx = BOB.make_defaults_tx(prev_utxo=alice_premium_dep_utxo)
+    alice_defaults_tx = BOB.make_defaults_tx(prev_utxo=alice_premium_dep_utxo, locktime=alice_defaults_locktime)
     await BOB.new_message("Alice defaults transaction is created.")
     # Bob signs premium deposition
     bob_sig = BOB.make_segwit_signature(
@@ -181,6 +182,7 @@ async def main():
             recipient_pubkeyhash=ALICE.pubkey_hash(),
             utxo=bob_funding_utxo,
             fee=DEFAULT_TX_FEE,
+            locktime=bob_defaults_locktime
         )
     await BOB.new_message("Margin deposition transaction is created.")
 
@@ -202,7 +204,7 @@ async def main():
 
     ################################ Bob defaults section ##################################
     # Alice creates Bob defaults
-    bob_defaults_tx = ALICE.make_defaults_tx(prev_utxo=bob_margin_dep_utxo)
+    bob_defaults_tx = ALICE.make_defaults_tx(prev_utxo=bob_margin_dep_utxo, locktime=bob_defaults_locktime)
     await ALICE.new_message("Bob defaults transaction is created.")
     # Alice signs default
     alice_sig = ALICE.make_segwit_signature(
@@ -322,6 +324,7 @@ async def main():
         await BOB.broadcast_transaction(BOB.defaults_ser, "ALICE DEFAULTS", send_to_websocket=True,
                                         txid=BOB.defaults_tx.get_txid())
         await BOB.new_message("Alice defaults transaction is broadcasted.")
+        exit(0)
 
     # Bob fulfills principal
     bob_principal_tx = BOB.fulfill_principal(
@@ -337,7 +340,8 @@ async def main():
                                     send_to_websocket=True, txid=BOB.principal_tx.get_txid())
     await BOB.new_message("Principal is fulfilled and broadcasted.")
 
-    bob_second_HTLC_output_tx = BOB.make_second_HTLC_output_tx(utxo=BOB.get_principal_utxo(), network="btc-test3")
+    bob_second_HTLC_output_tx = BOB.make_second_HTLC_output_tx(utxo=BOB.get_principal_utxo(), network="btc-test3",
+                                                               locktime=bob_principal_deposit_locktime)
     await BOB.new_message("Principal self-output transaction is created. For the case of not revealing leader key.")
 
     bob_sig_second_htlc_output = BOB.secret_key.sign_input(tx=bob_second_HTLC_output_tx, txin_index=0,
@@ -355,7 +359,7 @@ async def main():
         else:
             break
     if asyncState.alice_defaults == 'T':
-        await BOB.broadcast_transaction(BOB.second_HTLC_output_ser, "ALICE DEFAULTS (BOB PRINCIPAL)",
+        await BOB.broadcast_transaction(BOB.second_HTLC_output_ser, "RETURN PRINCIPAL BACK (ALICE DEFAULTS)",
                                         send_to_websocket=True, txid=BOB.second_HTLC_output_tx.get_txid())
         await BOB.new_message("Principal self-output transaction is broadcasted.")
 
@@ -376,7 +380,8 @@ async def main():
                                       send_to_websocket=True, txid=CAROL.HTLC_tx.get_txid())
     await CAROL.new_message("HTLC transaction is broadcasted.")
 
-    carol_htlc_output_tx = CAROL.make_second_HTLC_output_tx(utxo=carol_HTLC_utxo, network="bcy-tst")
+    carol_htlc_output_tx = CAROL.make_second_HTLC_output_tx(utxo=carol_HTLC_utxo, network="bcy-tst",
+                                                            locktime=carol_htlc_locktime)
     await CAROL.new_message("HTLC self-output transaction is created. For the case of not revealing leader key.")
 
     carol_sig_htlc_output = CAROL.secret_key_BCY.sign_input(tx=carol_htlc_output_tx, txin_index=0,
@@ -400,7 +405,7 @@ async def main():
     await ALICE.new_message("Redemption is fulfillment.")
 
     alice_second_HTLC_output_tx = ALICE.make_second_HTLC_output_tx(utxo=ALICE.get_redemption_utxo(),
-                                                                   network="btc-test3")
+                                                                   network="btc-test3", locktime=alice_redemption_locktime)
     await ALICE.new_message("HTLC self-output transaction is created. For the case of not revealing leader key.")
 
     alice_sig_second_htlc_output = ALICE.secret_key.sign_input(tx=alice_second_HTLC_output_tx, txin_index=0,
@@ -418,17 +423,17 @@ async def main():
             break
     if asyncState.bob_cheats == 'T':
         await ALICE.broadcast_transaction(ALICE.second_HTLC_output_ser, network="btc-test3",
-                                          transaction_name="REDEMPTION OUTPUT (BOB CHEATS)", send_to_websocket=True,
+                                          transaction_name="RETURN REDEMPTION BACK", send_to_websocket=True,
                                           txid=ALICE.second_HTLC_output_tx.get_txid())
         await ALICE.new_message("Redemption self-output transaction is broadcasted.")
 
         await BOB.broadcast_transaction(BOB.second_HTLC_output_ser, network="btc-test3",
-                                        transaction_name="PRINCIPAL OUTPUT (BOB CHEATS)", send_to_websocket=True,
+                                        transaction_name="RETURN PRINCIPAL BACK (BOB CHEATS)", send_to_websocket=True,
                                         txid=BOB.second_HTLC_output_tx.get_txid())
         await BOB.new_message("Principal self-output transaction is broadcasted.")
 
         await CAROL.broadcast_transaction(CAROL.second_HTLC_output_ser, network="bcy-tst",
-                                          transaction_name="HTLC OUTPUT (BOB CHEATS)", send_to_websocket=True,
+                                          transaction_name="RETURN HTLC BACK", send_to_websocket=True,
                                           txid=CAROL.second_HTLC_output_tx.get_txid())
         await CAROL.new_message("HTLC self-output transaction is broadcasted.")
 
