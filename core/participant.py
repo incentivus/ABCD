@@ -6,7 +6,8 @@ from bitcoinutils.keys import *
 from core.config import DEFAULT_TX_FEE
 from core.secret import Secret, int_to_le_hex
 from core.utxo import *
-
+import websockets
+from test.webapp import *
 
 def broadcast_transaction(raw_transaction, network):
     if network == 'btc-test3':
@@ -44,6 +45,8 @@ class Participant:
     _wif_BCY: str
     secret_key_BCY: PrivateKey
     public_key_BCY: PublicKey
+
+    websocket: websockets
 
     def __init__(self, wif: str, name, network="btc-test3"):
         self.name = name
@@ -176,13 +179,22 @@ class Participant:
         self.HTLC_output_tx = Transaction.copy(self.HTLC_output_tx)
         self.HTLC_output_ser = self.HTLC_output_tx.serialize()
 
-    def broadcast_transaction(self, raw_transaction, transaction_name, network="btc-test3"):
+    async def new_message(self, msg):
+        await notify_new_msg(msg, self.name.lower())
+
+    async def broadcast_transaction(self, raw_transaction, transaction_name, network="btc-test3",
+                              send_to_websocket=False, txid=None):
         response = broadcast_transaction(raw_transaction, network)
+        if send_to_websocket:
+            await notify_users(notify_new_trx(new_trx(self.name + " " + transaction_name + " " + txid)))
         if response.status_code == 201:
             print(self.name, "broadcasts", transaction_name)
         else:
             print(self.name, "failed to broadcast", transaction_name)
             print(response.text)
+
+    def set_websocket(self, connection):
+        self.websocket = connection
 
     def make_defaults_tx(self,
                          prev_utxo: UTXO,

@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ABCD</title>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+    <!-- jQuery library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <!-- Popper JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+
+    <!-- Latest compiled JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</head>
+<body>
+<p hidden id="samMessage" class="card-text message">msg</p>
+<div hidden id="samTransaction" class="transaction">trx</div>
+<div id="myModal" class="modal">
+    <div class="modal-content" style="height: 100px;">
+        <button id="myBtn" class="button" style="vertical-align:middle"><span>Click Here to start the scenario </span></button>
+<!--        <button id="myBtn" class="button" style="height: 500px;">Click to start the scenario</button>-->
+<!--        <button id="myBtn" class="btnn" style="height: 500px;">Open Modal</button>-->
+    </div>
+</div>
+
+    <div class="row">
+        <div class="col-sm transaction-box">
+        </div>
+    </div>
+    <div class="row">
+        <div class="card col-sm party alice" style="width: 18rem;">
+          <div class="card-body">
+            <h5 class="card-title text-center heading">Alice</h5>
+              <div id="alice-msg-box">
+              </div>
+            <a hidden href="#" class="btn btn-primary" id="alice-yes">Yes</a>
+            <a hidden href="#" class="btn btn-primary" id="alice-no">No</a>
+          </div>
+        </div>
+        <div class="card col-sm party bob" style="width: 18rem;">
+          <div class="card-body">
+            <h5 class="card-title text-center heading">Bob</h5>
+              <div id="bob-msg-box">
+              </div>
+            <a hidden href="#" class="btn btn-primary" id="bob-yes">Yes</a>
+            <a hidden href="#" class="btn btn-primary" id="bob-no">No</a>
+          </div>
+        </div>
+        <div class="card col-sm party carol" style="width: 18rem;">
+          <div class="card-body">
+            <h5 class="card-title text-center heading">Carol</h5>
+              <div id="carol-msg-box">
+              </div>
+            <a hidden href="#" class="btn btn-primary" id="carol-yes">Yes</a>
+            <a hidden href="#" class="btn btn-primary" id="carol-no">No</a>
+          </div>
+        </div>
+    </div>
+</body>
+<style>
+
+    body {font-family: Arial, Helvetica, sans-serif;}
+
+    /* The Modal (background) */
+    .modal {
+      display: block; /* Hidden by default */
+      position: fixed; /* Stay in place */
+      z-index: 1; /* Sit on top */
+      padding-top: 40vh; /* Location of the box */
+      left: 0;
+      top: 0;
+      width: 100%; /* Full width */
+      height: 100%; /* Full height */
+      overflow: auto; /* Enable scroll if needed */
+      background-color: rgb(0,0,0); /* Fallback color */
+      background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+    }
+
+    /* Modal Content */
+    .modal-content {
+      background-color: #fefefe;
+      margin: auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 80%;
+    }
+
+    /* The Close Button */
+    .close {
+      color: #aaaaaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+    }
+
+    .close:hover,
+    .close:focus {
+      color: #000;
+      text-decoration: none;
+      cursor: pointer;
+    }
+     .transaction-box {
+        margin: 30px;
+        background-color: powderblue;
+        border: 2px solid red;
+        border-radius: 20px 20px;
+      }
+      .transaction {
+        color: black;
+      }
+      .party {
+        margin: 30px 20px 20px 30px;
+        border: 2px solid powderblue;
+        border-radius: 20px 20px;
+
+        width: 90%;
+        /* Firefox */
+        display: -moz-box;
+        -moz-box-pack: center;
+        -moz-box-align: center;
+        /* Safari and Chrome */
+        display: -webkit-box;
+        -webkit-box-pack: center;
+        -webkit-box-align: center;
+        /* W3C */
+        display: box;
+        box-pack: center;
+        box-align: center;
+      }
+      .heading {
+        text-align: center;
+        font-size: 30px;
+      }
+      .alice.party{
+        background-color: rgba(121, 9, 86, 0.20);
+      }
+      .bob.party{
+        background-color: rgba(0, 0, 255, 0.40);
+      }
+      .carol.party{
+        background-color: rgba(0, 255, 0, 0.40)
+      }
+      .message.party{
+        text-align: left;
+        color: white
+      }
+<!--      .message{-->
+<!--        border: 2px solid gray;-->
+<!--        margin: 4px;-->
+<!--        padding: 4px;-->
+<!--        border-radius: 5px;-->
+<!--      }-->
+.message {
+  border-bottom: 3px solid #bbb;
+  margin-bottom: 10px;
+}
+.button {
+  display: inline-block;
+  border-radius: 4px;
+  background-color: #f4511e;
+  border: none;
+  color: #FFFFFF;
+  text-align: center;
+  font-size: 28px;
+  padding: 10px;
+  width: 100%;
+  transition: all 0.5s;
+  cursor: pointer;
+<!--  margin: 5px;-->
+}
+
+.button span {
+  cursor: pointer;
+  display: inline-block;
+  position: relative;
+  transition: 0.5s;
+    opacity: 0.5
+
+}
+
+.button span:after {
+  content: '\00bb';
+  position: absolute;
+  opacity: 0;
+  top: 0;
+  right: -80px;
+  transition: 0.5s;
+}
+  .button span:hover {opacity: 1}
+
+.button:hover span {
+  padding-right: 25px;
+}
+
+.button:hover span:after {
+  opacity: 1;
+  right: 0;
+}
+</style>
+<script>
+        alice = document.querySelector('.alice'),
+        bob = document.querySelector('.bob'),
+        carol = document.querySelector('.carol'),
+        transactionBox = document.querySelector('.transaction-box'),
+        sampleMsg = document.querySelector('#samMessage'),
+        sampleTrx = document.querySelector('#samTransaction'),
+        websocket = new WebSocket("ws://127.0.0.1:6789/");
+        var qs;
+<!--    minus.onclick = function (event) {-->
+<!--        websocket.send(JSON.stringify({action: 'minus'}));-->
+<!--    }-->
+<!--    plus.onclick = function (event) {-->
+<!--        websocket.send(JSON.stringify({action: 'plus'}));-->
+<!--    }-->
+    websocket.onmessage = function (event) {
+        data = JSON.parse(event.data);
+        switch (data.type) {
+            case 'start-done':
+                var modal = document.getElementById("myModal");
+                modal.style.display="none"
+                break;
+            case 'new-transaction':
+                var newTrx = sampleTrx.cloneNode(true)
+                newTrx.innerHTML = data.value
+                newTrx.removeAttribute("hidden");
+                newTrx.id=data.id
+                transactionBox.appendChild(newTrx)
+                break;
+            case 'update-transaction':
+                var trx = document.getElementById(data.id);
+                trx.innerHTML = data.value
+                break;
+            case 'update-message':
+                var msg = document.getElementById(data.id);
+                msg.innerHTML = data.value;
+                break;
+            case 'question':
+                qs = data
+                var newMsg = sampleMsg.cloneNode(true);
+                newMsg.innerHTML = data.value;
+                newMsg.removeAttribute("hidden");
+                newMsg.id=data.id;
+                document.getElementById(data.party + '-msg-box').appendChild(newMsg);
+                document.getElementById(data.party + '-yes').hidden = false;
+                document.getElementById(data.party + '-no').hidden = false;
+                break;
+            case 'btn-remove':
+                document.getElementById(data.party + '-yes').hidden = true;
+                document.getElementById(data.party + '-no').hidden = true;
+                break;
+            case 'new-message':
+                var newMsg = sampleMsg.cloneNode(true);
+                newMsg.innerHTML = data.value;
+                newMsg.removeAttribute("hidden");
+                newMsg.id=data.id;
+                document.getElementById(data.party + '-msg-box').appendChild(newMsg);
+
+            default:
+                console.error(
+                    "unsupported event", data);
+        }
+    };
+        document.getElementById('alice-no').onclick = function() {
+        websocket.send(JSON.stringify({"type": 'answer', "question": qs.value, "ans": 'F', "id": qs.id}));
+        document.getElementById('alice-no').hidden = true;
+        document.getElementById('alice-yes').hidden = true;
+    }
+        document.getElementById('alice-yes').onclick = function() {
+        websocket.send(JSON.stringify({"type": 'answer', "question": qs.value, "ans": 'T', "id": qs.id}));
+        document.getElementById('alice-no').hidden = true;
+        document.getElementById('alice-yes').hidden = true;
+    }
+        document.getElementById('bob-no').onclick = function() {
+        websocket.send(JSON.stringify({"type": 'answer', "question": qs.value, "ans": 'F', "id": qs.id}));
+        document.getElementById('bob-no').hidden = true;
+        document.getElementById('bob-yes').hidden = true;
+    }
+        document.getElementById('bob-yes').onclick = function() {
+        console.log(JSON.stringify({"type": 'answer', "question": qs.value, "ans": 'T', "id": qs.id}))
+        websocket.send(JSON.stringify({"type": 'answer', "question": qs.value, "ans": 'T', "id": qs.id}));
+        document.getElementById('bob-no').hidden = true;
+        document.getElementById('bob-yes').hidden = true;
+    }
+        document.getElementById('carol-no').onclick = function() {
+        websocket.send(JSON.stringify({"type": 'answer', "question": qs.value, "ans": 'F', "id": qs.id}));
+        document.getElementById('carol-no').setAttribute("hidden")
+        document.getElementById('carol-yes').setAttribute("hidden")
+    }
+        document.getElementById('carol-yes').onclick = function() {
+        websocket.send(JSON.stringify({"type": 'answer', "question": qs.value, "ans": 'T', "id": qs.id}));
+        document.getElementById('carol-no').setAttribute("hidden")
+        document.getElementById('carol-yes').setAttribute("hidden")
+    }
+</script>
+<script>
+    var btn = document.getElementById("myBtn");
+    var modal = document.getElementById("myModal");
+    btn.onclick = function() {
+        modal.style.display="none"
+        websocket.send(JSON.stringify({"type": 'start', "value": "T"}));
+    }
+
+</script>
+</html>
+
+

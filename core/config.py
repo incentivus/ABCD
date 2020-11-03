@@ -20,10 +20,13 @@ bob_principal_deposit_locktime = payback_preiod + minimum_locktime + btc_height
 alice_redemption_locktime = payback_preiod + 2 * minimum_locktime + btc_height
 carol_htlc_locktime = alice_redemption_locktime
 
-alice_reveals = True
-bob_defaults = False # TODO
-alice_defaults = False
-bob_cheats = True
+
+asyncState = type('', (), {})()
+asyncState.start = ['T', 'F', 'P'][2]
+asyncState.alice_reveals = ['T', 'F', 'P'][2] # True False Pending
+asyncState.bob_defaults = ['T', 'F', 'P'][2]  # TODO
+asyncState.alice_defaults = ['T', 'F', 'P'][2]
+asyncState.bob_cheats = ['T', 'F', 'P'][2]
 
 alice_utxo_to_spend = UTXO(
     # txid="090c1899cd46f4cb64c11c108ca97cc3165a96457b3a624f3fe205cdad6e31c5",
