@@ -37,6 +37,16 @@ def broadcast_transaction(raw_transaction, network):
         data=data)
 
 
+async def wait_until_next_interrupt():
+    while True:
+        await asyncio.sleep(1)
+        if asyncState.next == 'P':
+            continue
+        else:
+            asyncState.next = 'P'
+            return
+
+
 class Participant:
     network: str
     _wif: str
@@ -181,8 +191,15 @@ class Participant:
         self.HTLC_output_tx = Transaction.copy(self.HTLC_output_tx)
         self.HTLC_output_ser = self.HTLC_output_tx.serialize()
 
-    async def new_message(self, msg):
+    async def new_message(self, msg, end=False):
         await notify_new_msg(msg, self.name.lower())
+        if not end:
+            await wait_until_next_interrupt()
+        else:
+            await notify_finish()
+
+    async def update_balance(self, msg):
+        await notify_update_balance(msg, self.name.lower())
 
     async def broadcast_transaction(self, raw_transaction, transaction_name, network="btc-test3",
                               send_to_websocket=False, txid=None):

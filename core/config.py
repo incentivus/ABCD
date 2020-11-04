@@ -3,6 +3,8 @@ from core.utxo import *
 alice_premium_amount = 41432  # 0.00110721
 alice_principal_amount = 41432 + alice_premium_amount   # 0.00050000
 bob_principal_amount = 69000  # + alice_premium_amount
+bob_margin_amount = 49833
+carol_htlc_amount = 98000
 
 DEFAULT_TX_FEE = 15000  # 0.00010000
 
@@ -24,9 +26,10 @@ carol_htlc_locktime = alice_redemption_locktime
 asyncState = type('', (), {})()
 asyncState.start = ['T', 'F', 'P'][2]
 asyncState.alice_reveals = ['T', 'F', 'P'][2] # True False Pending
-asyncState.bob_defaults = ['T', 'F', 'P'][2]  # TODO
+asyncState.bob_defaults = ['T', 'F', 'P'][2]
 asyncState.alice_defaults = ['T', 'F', 'P'][2]
 asyncState.bob_cheats = ['T', 'F', 'P'][2]
+asyncState.next = ['T', 'F', 'P'][2]
 
 alice_utxo_to_spend = UTXO(
     # txid="090c1899cd46f4cb64c11c108ca97cc3165a96457b3a624f3fe205cdad6e31c5",

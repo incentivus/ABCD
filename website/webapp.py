@@ -15,10 +15,14 @@ STATE = {"value": 0}
 
 USERS = set()
 TRANSACTION_COUNTER = 1000
-MESSAGES_COUNTER = 1
+MESSAGES_COUNTER = 0
 
 TRANSACTIONS = []
 MESSAGES = []
+BALANCES = dict()
+BALANCES["alice"] = {}
+BALANCES["bob"] = {}
+BALANCES["carol"] = {}
 
 #
 # def state_event():
@@ -45,6 +49,17 @@ def create_new_message(type, party, value):
 
 def notify_new_msg(msg, party):
     return notify_users(json.dumps(create_new_message(type="new-message", party=party, value=msg)))
+
+
+def notify_finish():
+    return notify_users(json.dumps({"type": "finish"}))
+
+
+def notify_update_balance(msg, party):
+    global BALANCES
+    BALANCES[party] = msg
+    message = {"type": "update-balance", "party": party, "value": msg}
+    return notify_users(json.dumps(message))
 
 
 async def ask_alice_reveals():
@@ -91,17 +106,19 @@ async def register(websocket):
 
 
 async def update_user(user):
-    if len(MESSAGES):
-        print("Here")
-        await asyncio.wait([user.send(msg) for msg in MESSAGES])
-    if len(TRANSACTIONS):
-        await asyncio.wait([user.send(trx) for trx in TRANSACTIONS])
+    # if len(MESSAGES):
+    #     print("Here")
+    #     await asyncio.wait([user.send(msg) for msg in MESSAGES])
+    # if len(TRANSACTIONS):
+    #     await asyncio.wait([user.send(trx) for trx in TRANSACTIONS])
+    if asyncState.start == 'T':
+        await user.send(json.dumps({"type": "late"}))
+        unregister(user)
 
 
-async def unregister(websocket):
+def unregister(websocket):
     USERS.remove(websocket)
     # await notify_users()
-
 
 def notify_new_trx(trx):
     return json.dumps({"type": "new-transaction", "value": trx["value"], "id": trx["id"]})
@@ -180,7 +197,11 @@ async def counter(websocket, path):
                 else:
                     continue
 
-            if data["type"] == "start":
+            elif data["type"] == "next":
+                if data["value"] == "T":
+                    asyncState.next = 'T'
+                    continue
+            elif data["type"] == "start":
                 if data["value"] == "T":
                     asyncState.start = 'T'
                     global MESSAGES, MESSAGES_COUNTER
@@ -192,7 +213,7 @@ async def counter(websocket, path):
             else:
                 logging.error("unsupported event: {}", data)
     finally:
-        await unregister(websocket)
+        unregister(websocket)
 
 
 # @asyncio.coroutine
