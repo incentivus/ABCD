@@ -3,10 +3,7 @@ from typing import cast
 import requests
 from bitcoinutils.keys import *
 
-from core.config import DEFAULT_TX_FEE
-from core.secret import Secret, int_to_le_hex
-from core.utxo import *
-import websockets
+from core.secret import Secret
 from website.webapp import *
 
 
@@ -39,7 +36,7 @@ def broadcast_transaction(raw_transaction, network):
 
 async def wait_until_next_interrupt():
     while True:
-        await asyncio.sleep(1)
+        await asyncio.sleep(0.3)
         if asyncState.next == 'P':
             continue
         else:
@@ -205,7 +202,10 @@ class Participant:
                               send_to_websocket=False, txid=None):
         response = broadcast_transaction(raw_transaction, network)
         if send_to_websocket:
-            await notify_users(notify_new_trx(new_trx(self.name + " " + transaction_name + " " + txid)))
+            if network == 'btc-test3':
+                await notify_users(notify_new_trx(new_trx(self.name + " " + transaction_name + " " + txid, url='https://blockexplorer.one/btc/testnet/tx/' + txid + '?utm_source=cryptoapis.io')))
+            else:
+                await notify_users(notify_new_trx(new_trx(self.name + " " + transaction_name + " " + txid, url='https://live.blockcypher.com/bcy/tx/' + txid)))
         if response.status_code == 201:
             print(self.name, "broadcasts", transaction_name)
         else:

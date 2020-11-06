@@ -1,5 +1,4 @@
 from core.bondbuyer import *
-from core.bondissuer import *
 from core.exchange import *
 from website.webapp import *
 import asyncio
@@ -77,7 +76,7 @@ async def main():
 
     # Alice shows Bob funding
     BOB.audit_transaction(alice_funding_tx, alice_funding_utxo)
-    await BOB.new_message("Audited Alic's funding transaction.")
+    await BOB.new_message("Audited Alice's funding transaction.")
 
     # Alice signs funding
     alice_sig = ALICE.make_segwit_signature(
@@ -313,7 +312,7 @@ async def main():
 
     await ALICE.broadcast_transaction(ALICE.premium_dep_ser, transaction_name="PREMIUM DEPOSITION",
                                       send_to_websocket=True, txid=ALICE.premium_dep_tx.get_txid())
-    await ALICE.new_message("Premium deposition transaction is broadcasted.")
+    await ALICE.new_message("Margin deposition transaction is broadcasted.")
 
     BOB.commit_margin_dep(bob_sig_bob_margin, alice_sig_bob_margin, bob_funding_utxo.redeem_script.to_hex(),
                           ALICE_SECRET)
@@ -321,7 +320,7 @@ async def main():
 
     await BOB.broadcast_transaction(BOB.margin_dep_ser, transaction_name="MARGIN DEPOSITION",
                                     send_to_websocket=True, txid=BOB.margin_dep_tx.get_txid())
-    await BOB.new_message("Margin deposition transaction is broadcasted.")
+    await BOB.new_message("Premium deposition transaction is broadcasted.")
 
     await ask_bob_defaults()
     while True:
@@ -371,29 +370,6 @@ async def main():
 
     BOB.commit_second_HTLC_output(bob_sig_second_htlc_output, network="btc-test3")
 
-    await ask_alice_defaults()
-    while True:
-        await asyncio.sleep(1)
-        # print(asyncState.alice_reveals)
-        if asyncState.alice_defaults == 'P':
-            continue
-        else:
-            break
-    if asyncState.alice_defaults == 'T':
-        await BOB.broadcast_transaction(BOB.second_HTLC_output_ser, "RETURN PRINCIPAL BACK (ALICE DEFAULTS)",
-                                        send_to_websocket=True, txid=BOB.second_HTLC_output_tx.get_txid())
-        await BOB.update_balance("Principal (Principal returned back)")
-
-        await BOB.new_message("Principal self-output transaction is broadcasted.")
-
-        await BOB.broadcast_transaction(BOB.defaults_ser, "ALICE DEFAULTS",
-                                        send_to_websocket=True, txid=BOB.defaults_tx.get_txid())
-        await BOB.update_balance("Principal + Premium")
-
-        await BOB.new_message("Alice defaults transaction is broadcasted.", end=True)
-
-        exit(0)
-
     carol_HTLC_tx, carol_HTLC_utxo = CAROL.make_HTLC(utxo=carol_utxo_to_spend,
                                                      recipient_pubkeyhash=ALICE.pubkey_hash(network="bcy-tst"),
                                                      bob_principal_utxo=bob_principal_utxo,
@@ -417,6 +393,30 @@ async def main():
 
     CAROL.commit_second_HTLC_output(carol_sig_htlc_output, network="bcy-tst")
 
+    await ask_alice_defaults()
+    while True:
+        await asyncio.sleep(1)
+        # print(asyncState.alice_reveals)
+        if asyncState.alice_defaults == 'P':
+            continue
+        else:
+            break
+    if asyncState.alice_defaults == 'T':
+        await BOB.broadcast_transaction(BOB.second_HTLC_output_ser, "RETURN PRINCIPAL BACK (ALICE DEFAULTS)",
+                                        send_to_websocket=True, txid=BOB.second_HTLC_output_tx.get_txid())
+        await BOB.update_balance("Principal (Principal returned back)")
+
+        await BOB.new_message("Principal self-output transaction is broadcasted.")
+
+        await BOB.broadcast_transaction(BOB.defaults_ser, "ALICE DEFAULTS",
+                                        send_to_websocket=True, txid=BOB.defaults_tx.get_txid())
+        await BOB.update_balance("Principal + Premium")
+
+        await BOB.new_message("Alice defaults transaction is broadcasted.", end=True)
+
+        exit(0)
+
+
     # Alice fulfills redemption
     alice_redm_tx, alice_redm_utxo = ALICE.fulfill_redemption(
         redemption_tx=alice_redm_tx,
@@ -430,8 +430,6 @@ async def main():
     await ALICE.broadcast_transaction(ALICE.redemption_ser, transaction_name="REDEMPTION",
                                       send_to_websocket=True, txid=ALICE.redemption_tx.get_txid())
     await ALICE.update_balance("Nothing (Payback is locked)")
-
-    await ALICE.new_message("Redemption is fulfillment.")
 
     alice_second_HTLC_output_tx = ALICE.make_second_HTLC_output_tx(utxo=ALICE.get_redemption_utxo(),
                                                                    network="btc-test3", locktime=alice_redemption_locktime)
@@ -507,7 +505,7 @@ async def main():
 
 
 if __name__ == '__main__':
-    start_server = websockets.serve(counter, "localhost", 6789)
+    start_server = websockets.serve(counter, "0.0.0.0", 6789)
     ALICE.set_websocket(start_server)
     BOB.set_websocket(start_server)
     CAROL.set_websocket(start_server)

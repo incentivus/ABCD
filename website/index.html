@@ -17,7 +17,7 @@
 </head>
 <body>
 <p hidden id="samMessage" class="card-text message">msg</p>
-<div hidden id="samTransaction" class="transaction">trx</div>
+<div hidden id="samTransaction" class="transaction"> <a href='#' target="_blank">trx</a> </div>
 <div id="myModal" class="modal">
     <div class="modal-content" style="height: 100px;">
         <button id="myBtn" class="button" style="vertical-align:middle"><span>Click Here to start the scenario </span></button>
@@ -123,9 +123,7 @@
     }
      .transaction-box {
         margin: 30px;
-        background-color: powderblue;
         border: 2px solid red;
-        border-radius: 20px 20px;
       }
       .transaction {
         color: black;
@@ -221,6 +219,8 @@
 .btnqs{
 color: black;
 background-color: white;
+	margin-right: 10px;
+		margin-left: 10px;
 border-color: white;
 }
 
@@ -251,7 +251,7 @@ border-color: white;
         transactionBox = document.querySelector('.transaction-box'),
         sampleMsg = document.querySelector('#samMessage'),
         sampleTrx = document.querySelector('#samTransaction'),
-        websocket = new WebSocket("ws://127.0.0.1:6789/");
+        websocket = new WebSocket("ws://37.152.182.109:6789/");
         var qs;
 <!--    minus.onclick = function (event) {-->
 <!--        websocket.send(JSON.stringify({action: 'minus'}));-->
@@ -268,8 +268,9 @@ border-color: white;
                 break;
             case 'new-transaction':
                 var newTrx = sampleTrx.cloneNode(true)
-                newTrx.innerHTML = data.value
+                newTrx.children[0].innerHTML = data.value
                 newTrx.removeAttribute("hidden");
+		newTrx.children[0].href = data.url;
                 newTrx.id=data.id
                 transactionBox.appendChild(newTrx)
                 break;
