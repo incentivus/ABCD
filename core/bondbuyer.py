@@ -1,6 +1,5 @@
 from typing import Tuple
 
-from core.config import *
 from core.scripts import *
 
 
@@ -54,7 +53,7 @@ class BondBuyer(Participant):
             recipient_pubkey: PublicKey,
             recipient_pubkeyhash: str,
             utxo: UTXO,
-            locktime: int = bob_principal_deposit_locktime,
+            locktime: int = bob_defaults_locktime,
             fee: int = DEFAULT_TX_FEE,
     ) -> Tuple[Transaction, UTXO]:
         amount_to_send = utxo.value - fee
