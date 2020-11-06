@@ -1,7 +1,5 @@
 from typing import Tuple
 
-from core.participant import *
-from core.config import *
 from core.scripts import *
 
 

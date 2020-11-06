@@ -505,7 +505,7 @@ async def main():
 
 
 if __name__ == '__main__':
-    start_server = websockets.serve(counter, "127.0.0.1", 6789)
+    start_server = websockets.serve(counter, "0.0.0.0", 6789)
     ALICE.set_websocket(start_server)
     BOB.set_websocket(start_server)
     CAROL.set_websocket(start_server)

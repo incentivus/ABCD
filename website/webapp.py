@@ -121,7 +121,7 @@ def unregister(websocket):
     # await notify_users()
 
 def notify_new_trx(trx):
-    return json.dumps({"type": "new-transaction", "value": trx["value"], "id": trx["id"]})
+    return json.dumps({"type": "new-transaction", "value": trx["value"], "id": trx["id"], 'url': trx['url']})
 
 
 def notify_update_trx(trx):
@@ -132,9 +132,9 @@ def notify_update_msg(msg):
     return notify_users(json.dumps({"type": "update-message", "value": msg["value"], "id": msg["id"]}))
 
 
-def new_trx(tid):
+def new_trx(tid, url):
     global TRANSACTION_COUNTER
-    trx = {"value": tid, "id": TRANSACTION_COUNTER}
+    trx = {"value": tid, "id": TRANSACTION_COUNTER, 'url': url}
     TRANSACTION_COUNTER += 1
     TRANSACTIONS.append(trx)
     return trx
