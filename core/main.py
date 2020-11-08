@@ -101,7 +101,7 @@ async def main():
     ALICE.commit_refund(alice_sig, funding_script=alice_funding_utxo.redeem_script.to_hex())
     #############################################################################################
 
-    # Bob creates funding
+    # Bob creates funding 1
     bob_funding_tx, bob_funding_utxo = BOB.make_bob_funding_tx(recipient_pubkey=ALICE.public_key,
                                                                alice_funding_utxo=alice_funding_utxo,
                                                                utxo=bob_utxo_to_spend)
@@ -110,7 +110,6 @@ async def main():
     # Bob shows Alice funding
     ALICE.audit_transaction(bob_funding_tx, bob_funding_utxo)
     await ALICE.new_message("Audited Bob's funding transaction.")
-
 
     # Bob signs funding
     bob_sig = BOB.make_segwit_signature(
@@ -127,7 +126,6 @@ async def main():
     bob_refund_tx = BOB.make_refund_tx(funding_utxo=bob_funding_utxo, locktime=bob_refund_locktime)
     await BOB.new_message("Refund transaction is created.")
 
-
     # Bob signs refund
     bob_sig = BOB.make_segwit_signature(
         bob_refund_tx,
@@ -139,73 +137,65 @@ async def main():
     BOB.commit_refund(bob_sig, funding_script=bob_funding_utxo.redeem_script.to_hex())
     ##########################################################################################
 
-    # Alice creates premium dep
-    alice_premium_dep_tx, alice_premium_dep_utxo = \
-        ALICE.make_prem_deposit_tx(
-            recipient_pubkey=BOB.public_key,
-            recipient_pubkeyhash=BOB.pubkey_hash(),
-            utxo=alice_funding_utxo,
-            fee=DEFAULT_TX_FEE,
-            locktime=alice_defaults_locktime
-        )
-    await ALICE.new_message("Premium deposition transaction is created.")
-    # Bob signs premium dep
-    bob_sig = BOB.make_segwit_signature(
-        alice_premium_dep_tx,
-        0,
-        alice_funding_utxo
-    )
-    await BOB.new_message("Premium deposition transaction is signed.")
+    # Bob creates funding 2
+    bob_funding_2_tx, bob_funding_2_utxo = BOB.make_bob_funding_2_tx(recipient_pubkey=ALICE.public_key,
+                                                                     alice_funding_utxo=alice_funding_utxo,
+                                                                     utxo=bob_guarantee_utxo)
+    await BOB.new_message("Funding transaction number two is created.")
 
-    # Alice signs premium dep
-    alice_sig = ALICE.make_segwit_signature(
-        alice_premium_dep_tx,
-        0,
-        alice_funding_utxo
-    )
-    await ALICE.new_message("Premium deposition transaction is signed.")
-    ALICE.commit_premium_dep(alice_sig, bob_sig, alice_funding_utxo.redeem_script.to_hex())
+    # Bob shows Alice funding
+    ALICE.audit_transaction(bob_funding_2_tx, bob_funding_2_utxo)
+    await ALICE.new_message("Audited Bob's second funding transaction.")
 
-    ################################ Alice defaults section ##################################
-    # Bob creates alice defaults
-    alice_defaults_tx = BOB.make_defaults_tx(prev_utxo=alice_premium_dep_utxo, locktime=alice_defaults_locktime)
-    await BOB.new_message("Alice defaults transaction is created.")
-    # Bob signs premium deposition
+    # Bob signs funding
     bob_sig = BOB.make_segwit_signature(
-        alice_defaults_tx,
+        bob_funding_2_tx,
         0,
-        alice_premium_dep_utxo
+        bob_guarantee_utxo
     )
-    await BOB.new_message("Alice defaults transaction is signed.")
-    BOB.commit_defaults(bob_sig, prev_script=alice_premium_dep_utxo.redeem_script.to_hex())
+    BOB.commit_funding_2(bob_sig)
+    await BOB.new_message("Second funding transaction is signed.")
+
+    ################################### BOB refund section ###################################
+    # Bob creates refund
+    bob_refund_2_tx = BOB.make_refund_2_tx(funding_utxo=bob_funding_2_utxo, locktime=bob_refund_locktime)
+    await BOB.new_message("Second refund transaction is created.")
+
+    # Bob signs refund
+    bob_sig = BOB.make_segwit_signature(
+        bob_refund_2_tx,
+        0,
+        bob_guarantee_utxo
+    )
+    await BOB.new_message("Second refund transaction is signed.")
+
+    BOB.commit_refund_2(bob_sig, funding_script=bob_funding_2_utxo.redeem_script.to_hex())
     ##########################################################################################
 
-    # Bob creates margin dep
+    # Alice creates margin dep
     bob_margin_dep_tx, bob_margin_dep_utxo = \
-        BOB.make_margin_deposit_tx(
-            recipient_pubkey=ALICE.public_key,
-            recipient_pubkeyhash=ALICE.pubkey_hash(),
-            utxo=bob_funding_utxo,
-            fee=DEFAULT_TX_FEE,
-            locktime=bob_defaults_locktime
+        ALICE.make_margin_deposit_tx(
+            bob_pubkey=BOB.public_key,
+            utxo=alice_funding_utxo,
+            fee=DEFAULT_TX_FEE
         )
     await BOB.new_message("Margin deposition transaction is created.")
-
-    # Alice signs margin dep
-    alice_sig_bob_margin = ALICE.make_segwit_signature(
-        bob_margin_dep_tx,
-        0,
-        bob_funding_utxo
-    )
-    await ALICE.new_message("Margin deposition transaction is signed.")
-
     # Bob signs margin dep
-    bob_sig_bob_margin = BOB.make_segwit_signature(
+    bob_sig = BOB.make_segwit_signature(
         bob_margin_dep_tx,
         0,
         bob_funding_utxo
     )
     await BOB.new_message("Margin deposition transaction is signed.")
+
+    # Alice signs margin dep
+    alice_sig = ALICE.make_segwit_signature(
+        bob_margin_dep_tx,
+        0,
+        bob_funding_utxo
+    )
+    await ALICE.new_message("Margin deposition transaction is signed.")
+    ALICE.commit_margin_dep(alice_sig, bob_sig, alice_funding_utxo.redeem_script.to_hex())
 
     ################################ Bob defaults section ##################################
     # Alice creates Bob defaults
@@ -219,6 +209,45 @@ async def main():
     )
     await ALICE.new_message("Bob defaults transaction is signed.")
     ALICE.commit_defaults(alice_sig, prev_script=bob_margin_dep_utxo.redeem_script.to_hex())
+    ##########################################################################################
+
+    # Bob creates premium dep
+    alice_premium_dep_tx, alice_premium_dep_utxo = \
+        BOB.make_prem_deposit_tx(
+            recipient_pubkey=BOB.public_key,
+            utxo=bob_funding_utxo,
+            fee=DEFAULT_TX_FEE,
+        )
+    await BOB.new_message("Premium deposition transaction is created.")
+
+    # Alice signs margin dep
+    alice_sig_bob_margin = ALICE.make_segwit_signature(
+        alice_premium_dep_tx,
+        0,
+        alice_funding_utxo
+    )
+    await ALICE.new_message("Premium deposition transaction is signed.")
+
+    # Bob signs margin dep
+    bob_sig_alice_premium = BOB.make_segwit_signature(
+        alice_premium_dep_tx,
+        0,
+        alice_funding_utxo
+    )
+    await BOB.new_message("Premium deposition transaction is signed.")
+
+    ################################ Alice defaults section ##################################
+    # Bob creates alice defaults
+    alice_defaults_tx = BOB.make_defaults_tx(prev_utxo=alice_premium_dep_utxo, locktime=alice_defaults_locktime)
+    await BOB.new_message("Alice defaults transaction is created.")
+    # Bob signs premium deposition
+    bob_sig = BOB.make_segwit_signature(
+        alice_defaults_tx,
+        0,
+        alice_premium_dep_utxo
+    )
+    await BOB.new_message("Alice defaults transaction is signed.")
+    BOB.commit_defaults(bob_sig, prev_script=alice_premium_dep_utxo.redeem_script.to_hex())
     ##########################################################################################
 
     # Bob creates principal
@@ -310,16 +339,16 @@ async def main():
 
         exit(0)
 
-    await ALICE.broadcast_transaction(ALICE.premium_dep_ser, transaction_name="PREMIUM DEPOSITION",
-                                      send_to_websocket=True, txid=ALICE.premium_dep_tx.get_txid())
+    await ALICE.broadcast_transaction(ALICE.margin_dep_ser, transaction_name="MARGIN DEPOSITION",
+                                      send_to_websocket=True, txid=ALICE.margin_dep_tx.get_txid())
     await ALICE.new_message("Margin deposition transaction is broadcasted.")
 
-    BOB.commit_margin_dep(bob_sig_bob_margin, alice_sig_bob_margin, bob_funding_utxo.redeem_script.to_hex(),
-                          ALICE_SECRET)
+    BOB.commit_premium_dep(bob_sig_alice_premium, alice_sig_bob_margin, bob_funding_utxo.redeem_script.to_hex(),
+                           ALICE_SECRET)
     await BOB.new_message("I found the funding key.")
 
-    await BOB.broadcast_transaction(BOB.margin_dep_ser, transaction_name="MARGIN DEPOSITION",
-                                    send_to_websocket=True, txid=BOB.margin_dep_tx.get_txid())
+    await BOB.broadcast_transaction(BOB.premium_dep_ser, transaction_name="PREMIUM DEPOSITION",
+                                    send_to_websocket=True, txid=BOB.premium_dep_tx.get_txid())
     await BOB.new_message("Premium deposition transaction is broadcasted.")
 
     await ask_bob_defaults()

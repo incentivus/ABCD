@@ -95,10 +95,10 @@ def funding_script(
 
 
 def margin_dep_script(**kwargs) -> Script:
-    return premium_dep_script(**kwargs)
+    return guarantee_dep_script(**kwargs)
 
 
-def premium_dep_script(
+def guarantee_dep_script(
         sender_pubkey: PublicKey,
         recipient_pubkey: PublicKey,
         recipient_address: str,
