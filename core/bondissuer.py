@@ -132,8 +132,8 @@ class BondIssuer(Participant):
         self.redemption_tx.witnesses.append(Script(
             [
                 'OP_FALSE',
-                gu_alice_sig,
                 gu_bob_sig,
+                gu_alice_sig,
                 'OP_FALSE',
                 bob_guarantee_dep_utxo.redeem_script.to_hex()
             ]
@@ -156,7 +156,7 @@ class BondIssuer(Participant):
         txout_script = margin_dep_script(
             sender_pubkey=bob_pubkey,
             recipient_pubkey=self.public_key,
-            recipient_address=self.public_key.get_address(),
+            recipient_address=self.pubkey_hash("btc-test3"),
             locktime=locktime
         )
 
@@ -176,15 +176,15 @@ class BondIssuer(Participant):
         )
         self.margin_dep_tx = transaction
 
-        print("Bob margin deposition transaction made. TXID:", self.margin_dep_tx.get_txid())
+        #print("Bob margin deposition transaction made. TXID:", self.margin_dep_tx.get_txid())
         return transaction, new_utxo
 
     def commit_margin_dep(self, bob_sig, alice_sig, bob_funding_script):
         self.margin_dep_tx.witnesses.append(
             Script([
                 'OP_FALSE',
-                bob_sig,
                 alice_sig,
+                bob_sig,
                 self.funding_secret.hex(),  # todo: needs to get it from Alice
                 'OP_FALSE',
                 bob_funding_script
@@ -203,7 +203,7 @@ class BondIssuer(Participant):
         txout_script = guarantee_dep_script(
             sender_pubkey=bob_pubkey,
             recipient_pubkey=self.public_key,
-            recipient_address=self.public_key.get_address(),
+            recipient_address=self.pubkey_hash("btc-test3"),
             locktime=locktime
         )
 
@@ -223,15 +223,15 @@ class BondIssuer(Participant):
         )
         self.guarantee_dep_tx = transaction
 
-        print("Bob guarantee deposition transaction made. TXID:", self.margin_dep_tx.get_txid())
+        #print("Bob guarantee deposition transaction made. TXID:", self.margin_dep_tx.get_txid())
         return transaction, new_utxo
 
     def commit_guarantee_dep(self, bob_sig, alice_sig, bob_funding_2_script):
         self.guarantee_dep_tx.witnesses.append(
             Script([
                 'OP_FALSE',
-                bob_sig,
                 alice_sig,
+                bob_sig,
                 self.funding_secret.hex(),  # todo: needs to get it from Alice
                 'OP_FALSE',
                 bob_funding_2_script

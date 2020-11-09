@@ -35,6 +35,7 @@ def broadcast_transaction(raw_transaction, network):
 
 
 async def wait_until_next_interrupt():
+    return
     while True:
         await asyncio.sleep(0.3)
         if asyncState.next == 'P':

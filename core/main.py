@@ -120,6 +120,7 @@ async def main():
         bob_utxo_to_spend
     )
     BOB.commit_funding(bob_sig)
+    print(BOB.funding_ser)
     await BOB.new_message("Funding transaction is signed.")
 
 
@@ -260,6 +261,8 @@ async def main():
     await ALICE.new_message("Margin deposition transaction is signed.")
     ALICE.commit_margin_dep(alice_sig, bob_sig, bob_funding_utxo.redeem_script.to_hex())
 
+    print(ALICE.margin_dep_ser)
+
     ################################ Bob defaults section ##################################
     # Alice creates Bob defaults
     bob_defaults_tx = ALICE.make_defaults_tx(prev_utxo=bob_margin_dep_utxo, locktime=bob_defaults_locktime)
@@ -272,19 +275,19 @@ async def main():
     )
     await ALICE.new_message("Bob defaults transaction is signed.")
     ALICE.commit_defaults(alice_sig, prev_script=bob_margin_dep_utxo.redeem_script.to_hex())
-    ##########################################################################################
+##########################################################################################
 
     # Bob creates premium dep
     alice_premium_dep_tx, alice_premium_dep_utxo = \
         BOB.make_prem_deposit_tx(
             recipient_pubkey=BOB.public_key,
-            utxo=bob_funding_utxo,
+            utxo=alice_funding_utxo,
             fee=DEFAULT_TX_FEE,
         )
     await BOB.new_message("Premium deposition transaction is created.")
 
     # Alice signs margin dep
-    alice_sig_bob_margin = ALICE.make_segwit_signature(
+    alice_sig_alice_premium = ALICE.make_segwit_signature(
         alice_premium_dep_tx,
         0,
         alice_funding_utxo
@@ -301,16 +304,16 @@ async def main():
 
     ################################ Alice defaults section ##################################
     # Bob creates alice defaults
-    alice_defaults_tx = BOB.make_defaults_tx(prev_utxo=alice_premium_dep_utxo, locktime=alice_defaults_locktime)
-    await BOB.new_message("Alice defaults transaction is created.")
-    # Bob signs premium deposition
-    bob_sig = BOB.make_segwit_signature(
-        alice_defaults_tx,
-        0,
-        alice_premium_dep_utxo
-    )
-    await BOB.new_message("Alice defaults transaction is signed.")
-    BOB.commit_defaults(bob_sig, prev_script=alice_premium_dep_utxo.redeem_script.to_hex())
+    # alice_defaults_tx = BOB.make_defaults_tx(prev_utxo=alice_premium_dep_utxo, locktime=alice_defaults_locktime)
+    # await BOB.new_message("Alice defaults transaction is created.")
+    # # Bob signs premium deposition
+    # bob_sig = BOB.make_segwit_signature(
+    #     alice_defaults_tx,
+    #     0,
+    #     alice_premium_dep_utxo
+    # )
+    # await BOB.new_message("Alice defaults transaction is signed.")
+    # BOB.commit_defaults(bob_sig, prev_script=alice_premium_dep_utxo.redeem_script.to_hex())
     ##########################################################################################
 
     # Bob creates principal
@@ -414,7 +417,7 @@ async def main():
                                       send_to_websocket=True, txid=ALICE.guarantee_dep_tx.get_txid())
     await ALICE.new_message("Guarantee deposition transaction is broadcasted.")
 
-    BOB.commit_premium_dep(bob_sig_alice_premium, alice_sig_bob_margin, bob_funding_utxo.redeem_script.to_hex(),
+    BOB.commit_premium_dep(alice_sig_alice_premium, bob_sig_alice_premium, alice_funding_utxo.redeem_script.to_hex(),
                            ALICE_SECRET)
     await BOB.new_message("I found the funding key.")
 
@@ -437,11 +440,11 @@ async def main():
 
         await ALICE.new_message("Bob defaults transaction is broadcasted.")
 
-        await BOB.broadcast_transaction(BOB.defaults_ser, "ALICE DEFAULTS", send_to_websocket=True,
-                                        txid=BOB.defaults_tx.get_txid())
-        await BOB.update_balance("Premium")
+        await BOB.broadcast_transaction(BOB.withdraw_ser, "WITHDRAW GUARANTEE",
+                                        send_to_websocket=True, txid=BOB.withdraw_tx.get_txid())
+        await BOB.update_balance("Premium + Guarantee")
 
-        await BOB.new_message("Alice defaults transaction is broadcasted.", end=True)
+        await BOB.new_message("Guarantee withdrawal transaction is broadcasted.", end=True)
         exit(0)
 
     # Bob fulfills principal
@@ -508,15 +511,14 @@ async def main():
 
         await BOB.new_message("Principal self-output transaction is broadcasted.")
 
-        await BOB.broadcast_transaction(BOB.defaults_ser, "ALICE DEFAULTS",
-                                        send_to_websocket=True, txid=BOB.defaults_tx.get_txid())
+        # await BOB.broadcast_transaction(BOB.defaults_ser, "ALICE DEFAULTS",
+        #                                 send_to_websocket=True, txid=BOB.defaults_tx.get_txid())
 
         await BOB.broadcast_transaction(BOB.withdraw_ser, "WITHDRAW GUARANTEE",
                                         send_to_websocket=True, txid=BOB.withdraw_tx.get_txid())
 
         await BOB.update_balance("Principal + Premium + Guarantee")
 
-        await BOB.new_message("Alice defaults transaction is broadcasted.")
         await BOB.new_message("Guarantee withdrawal transaction is broadcasted.", end=True)
 
         exit(0)

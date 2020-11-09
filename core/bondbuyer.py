@@ -253,7 +253,7 @@ class BondBuyer(Participant):
         txin = utxo.create_tx_in()
         txout = TxOutput(
             amount_to_send,
-            txout_script.to_hex()
+            txout_script
         )
 
         transaction = new_tx([txin], [txout], has_segwit=True)
