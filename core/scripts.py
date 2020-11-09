@@ -1,5 +1,6 @@
 from core.participant import *
 from core.secret import *
+from bitcoinutils.script import *
 
 
 # def redemption_script(

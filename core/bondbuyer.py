@@ -1,6 +1,7 @@
 from typing import Tuple
 
 from core.scripts import *
+from bitcoinutils.transactions import *
 
 
 class BondBuyer(Participant):
@@ -9,6 +10,7 @@ class BondBuyer(Participant):
     funding_2_tx: Transaction
     refund_2_tx: Transaction
     premium_dep_tx: Transaction
+    withdraw_tx = Transaction
     premium_dep_ser: str
     funding_ser: str
     funding_2_ser: str
@@ -18,6 +20,7 @@ class BondBuyer(Participant):
     _principal_script: Script
     guarantee_dep_tx: Transaction
     guarantee_dep_ser: str
+    withdraw_ser: str
 
     def __init__(self, principal_secret: Secret, **kwargs):
         super().__init__(**kwargs)
@@ -82,7 +85,7 @@ class BondBuyer(Participant):
         )
 
         self.funding_2_tx = transaction
-        print("Bob funding transaction made. TXID:", self.funding_2_tx.get_txid())
+        print("Bob funding 2 transaction made. TXID:", self.funding_2_tx.get_txid())
         return transaction, new_utxo
 
     def make_principal_tx(
@@ -205,6 +208,39 @@ class BondBuyer(Participant):
 
         return self.refund_2_tx
 
+    def make_withdraw_tx(self,
+                       locktime: int,
+                       guarantee_utxo: UTXO,
+                       network: str = "btc-test3",
+                       fee: int = DEFAULT_TX_FEE,
+                       ) -> Transaction:
+        amount_to_send = guarantee_utxo.value - fee
+        txout = TxOutput(
+            amount_to_send,
+            self.p2pkh_script_pubkey(network=network)
+        )
+        txin = guarantee_utxo.create_tx_in(sequence=0xFFFFFFFE.to_bytes(4, "little"))
+        transaction = new_tx([txin], [txout], has_segwit=True, locktime=locktime.to_bytes(4, "little"))
+        self.withdraw_tx = transaction
+
+        return self.withdraw_tx
+
+    def commit_withdraw(self,
+                      sig: str,
+                      guarantee_script: hex,
+                      network="btc-test3"):
+        if network == "btc-test3":
+            self.withdraw_tx.witnesses.append(
+                Script([sig, self.public_key.to_hex(), self.public_key.to_hex(), guarantee_script])
+            )
+        elif network == "bcy-tst":
+            self.withdraw_tx.witnesses.append(
+                Script([sig, self.public_key_BCY.to_hex(), self.public_key_BCY.to_hex(), guarantee_script])
+            )
+        self.withdraw_tx = Transaction.copy(self.withdraw_tx)
+        self.withdraw_ser = self.withdraw_tx.serialize()
+        print(self.name, "withdraw transaction created.")
+
     def make_prem_deposit_tx(
             self,
             recipient_pubkey: PublicKey,
@@ -246,50 +282,50 @@ class BondBuyer(Participant):
         self.premium_dep_tx = Transaction.copy(self.premium_dep_tx)
         self.premium_dep_ser = self.premium_dep_tx.serialize()
 
-    def make_guarantee_deposit_tx(
-            self,
-            recipient_pubkey: PublicKey,
-            recipient_pubkeyhash: str,
-            utxo: UTXO,
-            locktime: int = bob_guarantee_locktime,
-            fee: int = DEFAULT_TX_FEE,
-    ) -> Tuple[Transaction, UTXO]:
-        amount_to_send = utxo.value - fee
-        txout_script = guarantee_dep_script(
-            sender_pubkey=self.public_key,
-            recipient_pubkey=self.public_key,
-            recipient_address=self.public_key.get_address(),
-            locktime=locktime
-        )
-
-        txin = utxo.create_tx_in()
-        txout = TxOutput(
-            amount_to_send,
-            txout_script.to_p2wsh_script_pub_key()
-        )
-
-        transaction = new_tx([txin], [txout], has_segwit=True)
-
-        new_utxo = UTXO(
-            txid=transaction.get_txid(),
-            output_idx=0,
-            value=amount_to_send,
-            redeem_script=txout_script,
-        )
-        self.guarantee_dep_tx = transaction
-
-        print("Bob margin deposition transaction made. TXID:", self.guarantee_dep_tx.get_txid())
-        return transaction, new_utxo
-
-    def commit_guarantee_dep(self, bob_sig, alice_sig, bob_funding_script):
-        self.guarantee_dep_tx.witnesses.append(
-            Script([
-                'OP_FALSE',
-                bob_sig,
-                alice_sig,
-                self.funding_secret.hex(),  # todo: needs to get it from Alice
-                'OP_FALSE',
-                bob_funding_script
-            ]))
-        self.guarantee_dep_tx = Transaction.copy(self.guarantee_dep_tx)
-        self.guarantee_dep_ser = self.guarantee_dep_tx.serialize()
+    # def make_guarantee_deposit_tx(
+    #         self,
+    #         recipient_pubkey: PublicKey,
+    #         recipient_pubkeyhash: str,
+    #         utxo: UTXO,
+    #         locktime: int = bob_guarantee_locktime,
+    #         fee: int = DEFAULT_TX_FEE,
+    # ) -> Tuple[Transaction, UTXO]:
+    #     amount_to_send = utxo.value - fee
+    #     txout_script = guarantee_dep_script(
+    #         sender_pubkey=self.public_key,
+    #         recipient_pubkey=self.public_key,
+    #         recipient_address=self.public_key.get_address(),
+    #         locktime=locktime
+    #     )
+    #
+    #     txin = utxo.create_tx_in()
+    #     txout = TxOutput(
+    #         amount_to_send,
+    #         txout_script.to_p2wsh_script_pub_key()
+    #     )
+    #
+    #     transaction = new_tx([txin], [txout], has_segwit=True)
+    #
+    #     new_utxo = UTXO(
+    #         txid=transaction.get_txid(),
+    #         output_idx=0,
+    #         value=amount_to_send,
+    #         redeem_script=txout_script,
+    #     )
+    #     self.guarantee_dep_tx = transaction
+    #
+    #     print("Bob margin deposition transaction made. TXID:", self.guarantee_dep_tx.get_txid())
+    #     return transaction, new_utxo
+    #
+    # def commit_guarantee_dep(self, bob_sig, alice_sig, bob_funding_script):
+    #     self.guarantee_dep_tx.witnesses.append(
+    #         Script([
+    #             'OP_FALSE',
+    #             bob_sig,
+    #             alice_sig,
+    #             self.funding_secret.hex(),  # todo: needs to get it from Alice
+    #             'OP_FALSE',
+    #             bob_funding_script
+    #         ]))
+    #     self.guarantee_dep_tx = Transaction.copy(self.guarantee_dep_tx)
+    #     self.guarantee_dep_ser = self.guarantee_dep_tx.serialize()
