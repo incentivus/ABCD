@@ -195,15 +195,16 @@ class BondIssuer(Participant):
     def make_guarantee_deposit_tx(
             self,
             bob_pubkey: PublicKey,
+            bob_address: str,
             utxo: UTXO,
             locktime: int = bob_guarantee_locktime,
             fee: int = DEFAULT_TX_FEE,
     ) -> Tuple[Transaction, UTXO]:
         amount_to_send = utxo.value - fee
         txout_script = guarantee_dep_script(
-            sender_pubkey=bob_pubkey,
+            sender_pubkey=bob_pubkey, # TODO here we made a mess ...  To be fixed later
             recipient_pubkey=self.public_key,
-            recipient_address=self.pubkey_hash("btc-test3"),
+            recipient_address=bob_address,
             locktime=locktime
         )
 

@@ -106,7 +106,7 @@ async def main():
     # Bob creates funding 1
     bob_funding_tx, bob_funding_utxo = BOB.make_bob_funding_tx(recipient_pubkey=ALICE.public_key,
                                                                alice_funding_utxo=alice_funding_utxo,
-                                                               utxo=bob_guarantee_utxo)
+                                                               utxo=bob_utxo_to_spend)
     await BOB.new_message("Funding transaction is created.")
 
     # Bob shows Alice funding
@@ -143,7 +143,7 @@ async def main():
     # Bob creates funding 2
     bob_funding_2_tx, bob_funding_2_utxo = BOB.make_bob_funding_2_tx(recipient_pubkey=ALICE.public_key,
                                                                      alice_funding_utxo=alice_funding_utxo,
-                                                                     utxo=bob_utxo_to_spend)
+                                                                     utxo=bob_guarantee_utxo)
     await BOB.new_message("Funding transaction number two is created.")
 
     # Bob shows Alice funding 2
@@ -175,22 +175,13 @@ async def main():
     BOB.commit_refund_2(bob_sig, funding_script=bob_funding_2_utxo.redeem_script.to_hex())
     ##########################################################################################
 
-
-
-
-
-
-
-
-
-
-
     # Alice creates guarantee
     bob_guarantee_dep_tx, bob_guarantee_dep_utxo = \
         ALICE.make_guarantee_deposit_tx(
             bob_pubkey=BOB.public_key,
             utxo=bob_funding_2_utxo,  # todo: this has to be Bob's
-            fee=DEFAULT_TX_FEE
+            fee=DEFAULT_TX_FEE,
+            bob_address=BOB.pubkey_hash("btc-test3")
         )
     await BOB.new_message("Guarantee deposition transaction is created.")
     # Bob signs guarantee dep
@@ -211,7 +202,7 @@ async def main():
     ALICE.commit_guarantee_dep(alice_sig_gu, bob_sig_gu, bob_funding_2_utxo.redeem_script.to_hex())
 
     # Bob creates guarantee withdrawal
-    bob_withdraw_tx = BOB.make_withdraw_tx(guarantee_utxo=bob_guarantee_utxo, locktime=bob_guarantee_locktime)
+    bob_withdraw_tx = BOB.make_withdraw_tx(guarantee_utxo=bob_guarantee_dep_utxo, locktime=bob_guarantee_locktime)
     await BOB.new_message("Guarantee withdrawal transaction is created.")
 
     # Bob signs guarantee withdrawal
@@ -223,18 +214,6 @@ async def main():
     await BOB.new_message("Guarantee withdrawal transaction is signed.")
 
     BOB.commit_withdraw(bob_sig, guarantee_script=bob_guarantee_dep_utxo.redeem_script.to_hex())
-
-
-
-
-
-
-
-
-
-
-
-
 
     # Alice creates margin dep
     bob_margin_dep_tx, bob_margin_dep_utxo = \
@@ -612,6 +591,8 @@ async def main():
 
 
 if __name__ == '__main__':
+    print(BOB.public_key.get_address().to_string())
+    exit(0)
     start_server = websockets.serve(counter, "0.0.0.0", 6789)
     ALICE.set_websocket(start_server)
     BOB.set_websocket(start_server)

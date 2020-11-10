@@ -28,7 +28,7 @@ asyncState = type('', (), {})()
 asyncState.start = ['T', 'F', 'P'][2]
 asyncState.alice_reveals = ['T', 'F', 'P'][0] # True False Pending
 asyncState.bob_defaults = ['T', 'F', 'P'][0]
-asyncState.alice_defaults = ['T', 'F', 'P'][1]
+asyncState.alice_defaults = ['T', 'F', 'P'][0]
 asyncState.bob_cheats = ['T', 'F', 'P'][1]
 asyncState.next = ['T', 'F', 'P'][2]
 
@@ -54,7 +54,7 @@ alice_fulfillment_utxo = UTXO(
 
 bob_utxo_to_spend = UTXO(
     txid="1897e153c74bf86489c52d1f19c256911388979f8494ffb89344ca826cea6f03",
-    output_idx=49, # 43
+    output_idx=54, # 43
     value=49833,  # 0.00049833
     redeem_script=None  # should this be something?
 )
@@ -66,7 +66,7 @@ bob_fulfillment_utxo = UTXO(
 )
 bob_guarantee_utxo = UTXO(
     txid="1897e153c74bf86489c52d1f19c256911388979f8494ffb89344ca826cea6f03",
-    output_idx=51, # 44
+    output_idx=53, # 44
     value=49833,  # 0.00049833
     redeem_script=None  # should this be something?
 )
