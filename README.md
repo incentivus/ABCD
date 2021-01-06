@@ -1,4 +1,5 @@
 # Different scenarios of ABCD
+ABCD paper: <http://sina.sharif.edu/~mtefagh/papers/ABCD.pdf>
 ## Pointers to the transactions:
 ### Bob cheats:
 
