@@ -283,7 +283,7 @@ border-color: white;
                 msg.innerHTML = data.id + "." + data.value;
                 break;
             case 'question':
-                qs = data
+                qs = data;
                 var newMsg = sampleMsg.cloneNode(true);
                 newMsg.innerHTML = data.id + "." + data.value;
                 newMsg.removeAttribute("hidden");

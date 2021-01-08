@@ -74,7 +74,6 @@ async def main():
     await ALICE.update_balance("Premium")
     await BOB.update_balance("Margin")
     await CAROL.update_balance("HTLC amount")
-
     await wait_until_next_interrupt()
 
     # Alice creates funding

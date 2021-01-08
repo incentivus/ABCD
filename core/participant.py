@@ -53,11 +53,11 @@ def get_network_2(network="btctest3"):
 
 
 async def wait_until_next_interrupt():
-    return
+    # return
     while True:
         await asyncio.sleep(0.3)
         if asyncState.next == 'P':
-            print("Waiting")
+            # print("Waiting")
             continue
         else:
             asyncState.next = 'P'

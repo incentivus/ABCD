@@ -11,7 +11,7 @@ DEFAULT_TX_FEE = 15000  # 0.00010000
 
 payback_preiod = 10  # P
 bob_deposition_preiod = 2  # M
-bcy_height = 3109190
+ltc_height = 1765402
 btc_height = 1865986  # 1866007
 minimum_locktime = 1  # T
 
@@ -21,7 +21,7 @@ bob_defaults_locktime = bob_deposition_preiod + btc_height
 alice_defaults_locktime = payback_preiod + btc_height
 bob_principal_deposit_locktime = payback_preiod + 2 * minimum_locktime + btc_height
 alice_redemption_locktime = payback_preiod + minimum_locktime + btc_height
-carol_htlc_locktime = alice_redemption_locktime
+carol_htlc_locktime = payback_preiod + minimum_locktime + ltc_height
 bob_guarantee_locktime = payback_preiod + btc_height
 
 asyncState = type('', (), {})()
@@ -37,7 +37,7 @@ alice_utxo_to_spend = UTXO(
     # txid="090c1899cd46f4cb64c11c108ca97cc3165a96457b3a624f3fe205cdad6e31c5",
     txid="bbb1992be7e5642874fe3fac604048263531aa1e396d7d8f9c825cafd9aed8e4",
     # txid="6a5a0831134059126f10d45200d6c4723dc502572926a00c7958467649a42fbd",
-    output_idx=47,
+    output_idx=48,
     # output_idx=0,
     value=41432,  # 0.00120721
     # value=11432,
@@ -56,30 +56,30 @@ alice_fulfillment_utxo = UTXO(
 
 bob_utxo_to_spend = UTXO(
     network="btc-test3",
-    txid="1897e153c74bf86489c52d1f19c256911388979f8494ffb89344ca826cea6f03",
-    output_idx=54,  # 43
-    value=49833,  # 0.00049833
+    txid="b8fc8aae25cb0b7678f33d507c77c4fe61d18b3d6d23a7751bfd8d6055159185",
+    output_idx=6,  # 43
+    value=98500,  # 0.00049833
     redeem_script=None  # should this be something?
 )
 bob_fulfillment_utxo = UTXO(
     network="btc-test3",
-    txid="1897e153c74bf86489c52d1f19c256911388979f8494ffb89344ca826cea6f03",
-    output_idx=49,  # 44
-    value=49833,  # 0.00049833
+    txid="b8fc8aae25cb0b7678f33d507c77c4fe61d18b3d6d23a7751bfd8d6055159185",
+    output_idx=7,  # 44
+    value=98500,  # 0.00049833
     redeem_script=None  # should this be something?
 )
 bob_guarantee_utxo = UTXO(
     network="btc-test3",
-    txid="1897e153c74bf86489c52d1f19c256911388979f8494ffb89344ca826cea6f03",
-    output_idx=53,  # 44
-    value=49833,  # 0.00049833
+    txid="b8fc8aae25cb0b7678f33d507c77c4fe61d18b3d6d23a7751bfd8d6055159185",
+    output_idx=8,  # 44
+    value=98500,  # 0.00049833
     redeem_script=None  # should this be something?
 )
 # LTC network
 carol_utxo_to_spend = UTXO(
     network="ltc-tst",
     txid="3710cb69d80d5a749e1cfc5069199794c3555254f8840b0f9e1a89198c16d1f9",
-    output_idx=0,
+    output_idx=3,
     value=1249750,  # 0.00099
     redeem_script=None,
 )
