@@ -1,24 +1,24 @@
 from typing import Tuple
 
 from core.scripts import *
-from bitcoinutils.transactions import *
+from core.participant import *
 
 
 class BondBuyer(Participant):
-    funding_tx: Transaction
-    principal_tx: Transaction
-    funding_2_tx: Transaction
-    refund_2_tx: Transaction
-    premium_dep_tx: Transaction
-    withdraw_tx = Transaction
+    funding_tx: btctrans.Transaction
+    principal_tx: btctrans.Transaction
+    funding_2_tx: btctrans.Transaction
+    refund_2_tx: btctrans.Transaction
+    premium_dep_tx: btctrans.Transaction
+    withdraw_tx = btctrans.Transaction
     premium_dep_ser: str
     funding_ser: str
     funding_2_ser: str
     refund_2_ser: str
     principal_ser: str
     _principal_amount: int
-    _principal_script: Script
-    guarantee_dep_tx: Transaction
+    _principal_script: btctrans.Script
+    guarantee_dep_tx: btctrans.Transaction
     guarantee_dep_ser: str
     withdraw_ser: str
 
@@ -28,25 +28,27 @@ class BondBuyer(Participant):
 
     def make_bob_funding_tx(
             self,
-            recipient_pubkey: PublicKey,
+            recipient_pubkey: btckeys.PublicKey,
             alice_funding_utxo: UTXO,
             utxo: UTXO = bob_utxo_to_spend,
             fee: int = DEFAULT_TX_FEE
-    ) -> Tuple[Transaction, UTXO]:
+    ) -> Tuple[btctrans.Transaction, UTXO]:
         amount_to_send = utxo.value - fee
         txout_script = funding_script(
+            network="btc-test3",
             sender_address=self.pubkey_hash(),
             sender_pubkey=self.public_key,
             recipient_pubkey=recipient_pubkey,
             secret=alice_funding_utxo.redeem_script.script[13],
             locktime=bob_refund_locktime
         )
-        txout = TxOutput(amount_to_send, txout_script.to_p2wsh_script_pub_key())
+        txout = btctrans.TxOutput(amount_to_send, txout_script.to_p2wsh_script_pub_key())
         txin = utxo.create_tx_in()
 
-        transaction = new_tx([txin], [txout], has_segwit=True)
+        transaction = new_tx([txin], [txout], has_segwit=True, network="btc-test3")
 
         new_utxo = UTXO(
+            network="btc-test3",
             txid=transaction.get_txid(),
             output_idx=0,
             value=amount_to_send,
@@ -59,25 +61,27 @@ class BondBuyer(Participant):
 
     def make_bob_funding_2_tx(
             self,
-            recipient_pubkey: PublicKey,
+            recipient_pubkey: btckeys.PublicKey,
             alice_funding_utxo: UTXO,
             utxo: UTXO = bob_utxo_to_spend,
             fee: int = DEFAULT_TX_FEE
-    ) -> Tuple[Transaction, UTXO]:
+    ) -> Tuple[btctrans.Transaction, UTXO]:
         amount_to_send = utxo.value - fee
         txout_script = funding_script(
+            network="btc-test3",
             sender_address=self.pubkey_hash(),
             sender_pubkey=self.public_key,
             recipient_pubkey=recipient_pubkey,
             secret=alice_funding_utxo.redeem_script.script[13],
             locktime=bob_refund_locktime
         )
-        txout = TxOutput(amount_to_send, txout_script.to_p2wsh_script_pub_key())
+        txout = btctrans.TxOutput(amount_to_send, txout_script.to_p2wsh_script_pub_key())
         txin = utxo.create_tx_in()
 
-        transaction = new_tx([txin], [txout], has_segwit=True)
+        transaction = new_tx([txin], [txout], has_segwit=True, network="btc-test3")
 
         new_utxo = UTXO(
+            network="btc-test3",
             txid=transaction.get_txid(),
             output_idx=0,
             value=amount_to_send,
@@ -94,23 +98,25 @@ class BondBuyer(Participant):
             utxo: UTXO,
             locktime: int,
             fee: int = DEFAULT_TX_FEE,
-    ) -> Tuple[Transaction, UTXO]:
-        self._principal_amount = bob_principal_amount-fee
+    ) -> Tuple[btctrans.Transaction, UTXO]:
+        self._principal_amount = bob_principal_amount - fee
         self._principal_script = HTLC_script(
+            network="btc-test3",
             sender_address=self.pubkey_hash(network="btc-test3"),
             recipient_address=recipient_pubkeyhash,
             secret_hash=self.principal_secret.digest_hex(),
             locktime=locktime
         )
 
-        txin = utxo.create_tx_in()
-        txout = TxOutput(
+        txin = utxo.create_tx_in(network="btc-test3")
+        txout = btctrans.TxOutput(
             self._principal_amount,
             self._principal_script
         )
 
-        self.principal_tx = Transaction([txin], [txout], has_segwit=True)
+        self.principal_tx = btctrans.Transaction([txin], [txout], has_segwit=True)
         new_utxo = UTXO(
+            network="btc-test3",
             txid=self.principal_tx.get_txid(),
             output_idx=0,
             value=self._principal_amount,
@@ -122,10 +128,10 @@ class BondBuyer(Participant):
 
     def fulfill_principal(
             self,
-            principal_tx: Transaction,
+            principal_tx: btctrans.Transaction,
             utxo: UTXO,
-    ) -> Transaction:
-        txin = utxo.create_tx_in()
+    ) -> btctrans.Transaction:
+        txin = utxo.create_tx_in(network="btc-test3")
         self.principal_tx.inputs.append(txin)
 
         print("Bob principal deposition transaction fulfilled.")
@@ -133,6 +139,7 @@ class BondBuyer(Participant):
 
     def get_principal_utxo(self) -> UTXO:
         return UTXO(
+            network="btc-test3",
             txid=self.principal_tx.get_txid(),
             output_idx=0,
             value=self._principal_amount,
@@ -143,22 +150,23 @@ class BondBuyer(Participant):
     Commit to a transaction by early serializing. We need this due to lack of immutable 
     transaction support on underlying library.
     '''
+
     def commit_funding(self, alice_sig):
         self.funding_tx.witnesses.append(
-            Script([alice_sig, self.public_key.to_hex()])
+            btcscript.Script([alice_sig, self.public_key.to_hex()])
         )
-        self.funding_tx = Transaction.copy(self.funding_tx)
+        self.funding_tx = btctrans.Transaction.copy(self.funding_tx)
         self.funding_ser = self.funding_tx.serialize()
 
     def commit_funding_2(self, alice_sig):
         self.funding_2_tx.witnesses.append(
-            Script([alice_sig, self.public_key.to_hex()])
+            btcscript.Script([alice_sig, self.public_key.to_hex()])
         )
-        self.funding_2_tx = Transaction.copy(self.funding_2_tx)
+        self.funding_2_tx = btctrans.Transaction.copy(self.funding_2_tx)
         self.funding_2_ser = self.funding_2_tx.serialize()
 
     def commit_principal(self, margin_bob_sig, margin_alice_sig, bob_sig_ff, bob_margin_dep_utxo: UTXO):
-        self.principal_tx.witnesses.append(Script(
+        self.principal_tx.witnesses.append(btcscript.Script(
             [
                 'OP_FALSE',
                 margin_bob_sig,
@@ -169,96 +177,87 @@ class BondBuyer(Participant):
         ))
 
         self.principal_tx.witnesses.append(
-            Script([bob_sig_ff, self.public_key.to_hex()])
+            btcscript.Script([bob_sig_ff, self.public_key.to_hex()])
         )
-        self.principal_tx = Transaction.copy(self.principal_tx)
+        self.principal_tx = btctrans.Transaction.copy(self.principal_tx)
         print(self.principal_tx.get_txid())
         self.principal_ser = self.principal_tx.serialize()
 
     def commit_refund_2(self,
-                      sig: str,
-                      funding_script: hex,
-                      network="btc-test3"):
-        if network == "btc-test3":
-            self.refund_2_tx.witnesses.append(
-                Script([sig, self.public_key.to_hex(), self.public_key.to_hex(), funding_script])
-            )
-        elif network == "bcy-tst":
-            self.refund_2_tx.witnesses.append(
-                Script([sig, self.public_key_BCY.to_hex(), self.public_key_BCY.to_hex(), funding_script])
-            )
-        self.refund_2_tx = Transaction.copy(self.refund_2_tx)
+                        sig: str,
+                        funding_script: hex):
+        self.refund_2_tx.witnesses.append(
+            btcscript.Script([sig, self.public_key.to_hex(), self.public_key.to_hex(), funding_script])
+        )
+        self.refund_2_tx = btctrans.Transaction.copy(self.refund_2_tx)
         self.refund_2_ser = self.refund_2_tx.serialize()
         print(self.name, "refund transaction created.")
 
     def make_refund_2_tx(self,
-                       locktime: int,
-                       funding_utxo: UTXO,
-                       network: str = "btc-test3",
-                       fee: int = DEFAULT_TX_FEE,
-                       ) -> Transaction:
+                         locktime: int,
+                         funding_utxo: UTXO,
+                         network: str = "btc-test3",
+                         fee: int = DEFAULT_TX_FEE,
+                         ) -> btctrans.Transaction:
         amount_to_send = funding_utxo.value - fee
-        txout = TxOutput(
+        txout = btctrans.TxOutput(
             amount_to_send,
             self.p2pkh_script_pubkey(network=network)
         )
-        txin = funding_utxo.create_tx_in(sequence=0xFFFFFFFE.to_bytes(4, "little"))
-        transaction = new_tx([txin], [txout], has_segwit=True, locktime=locktime.to_bytes(4, "little"))
+        txin = funding_utxo.create_tx_in(sequence=0xFFFFFFFE.to_bytes(4, "little"), network="btc-test3")
+        transaction = new_tx([txin], [txout], has_segwit=True,
+                             locktime=locktime.to_bytes(4, "little"), network="btc-test3")
         self.refund_2_tx = transaction
 
         return self.refund_2_tx
 
     def make_withdraw_tx(self,
-                       locktime: int,
-                       guarantee_utxo: UTXO,
-                       network: str = "btc-test3",
-                       fee: int = DEFAULT_TX_FEE,
-                       ) -> Transaction:
+                         locktime: int,
+                         guarantee_utxo: UTXO,
+                         network: str = "btc-test3",
+                         fee: int = DEFAULT_TX_FEE,
+                         ) -> btctrans.Transaction:
         amount_to_send = guarantee_utxo.value - fee
-        txout = TxOutput(
+        txout = btctrans.TxOutput(
             amount_to_send,
             self.p2pkh_script_pubkey(network=network)
         )
-        txin = guarantee_utxo.create_tx_in(sequence=0xFFFFFFFE.to_bytes(4, "little"))
-        transaction = new_tx([txin], [txout], has_segwit=True, locktime=locktime.to_bytes(4, "little"))
+        txin = guarantee_utxo.create_tx_in(sequence=0xFFFFFFFE.to_bytes(4, "little"), network="btc-test3")
+        transaction = new_tx([txin], [txout], has_segwit=True, locktime=locktime.to_bytes(4, "little"),
+                             network="btc-test3")
         self.withdraw_tx = transaction
 
         return self.withdraw_tx
 
     def commit_withdraw(self,
-                      sig: str,
-                      guarantee_script: hex,
-                      network="btc-test3"):
-        if network == "btc-test3":
-            self.withdraw_tx.witnesses.append(
-                Script([sig, self.public_key.to_hex(), self.public_key.to_hex(), guarantee_script])
-            )
-        elif network == "bcy-tst":
-            self.withdraw_tx.witnesses.append(
-                Script([sig, self.public_key_BCY.to_hex(), self.public_key_BCY.to_hex(), guarantee_script])
-            )
-        self.withdraw_tx = Transaction.copy(self.withdraw_tx)
+                        sig: str,
+                        guarantee_script: hex):
+        self.withdraw_tx.witnesses.append(
+            btcscript.Script([sig, self.public_key.to_hex(), self.public_key.to_hex(), guarantee_script])
+        )
+        self.withdraw_tx = btctrans.Transaction.copy(self.withdraw_tx)
         self.withdraw_ser = self.withdraw_tx.serialize()
         print(self.name, "withdraw transaction created.")
 
     def make_prem_deposit_tx(
             self,
-            recipient_pubkey: PublicKey,
+            recipient_pubkey: btckeys.PublicKey,
             utxo: UTXO,
             fee: int = DEFAULT_TX_FEE,
-    ) -> Tuple[Transaction, UTXO]:
+    ) -> Tuple[btctrans.Transaction, UTXO]:
         amount_to_send = utxo.value - fee
         txout_script = recipient_pubkey.get_address().to_script_pub_key()
 
-        txin = utxo.create_tx_in()
-        txout = TxOutput(
+        txin = utxo.create_tx_in(network="btc-test3")
+        txout = btctrans.TxOutput(
             amount_to_send,
             txout_script
         )
 
-        transaction = new_tx([txin], [txout], has_segwit=True)
+        transaction = new_tx([txin], [txout], has_segwit=True, network="btc-test3")
 
         new_utxo = UTXO(
+            network="btc-test3",
             txid=transaction.get_txid(),
             output_idx=0,
             value=amount_to_send,
@@ -271,7 +270,7 @@ class BondBuyer(Participant):
 
     def commit_premium_dep(self, alice_sig, bob_sig, alice_funding_script, secret: Secret):
         self.premium_dep_tx.witnesses.append(
-            Script([
+            btcscript.Script([
                 'OP_FALSE',
                 alice_sig,
                 bob_sig,
@@ -279,7 +278,7 @@ class BondBuyer(Participant):
                 'OP_FALSE',
                 alice_funding_script
             ]))
-        self.premium_dep_tx = Transaction.copy(self.premium_dep_tx)
+        self.premium_dep_tx = btctrans.Transaction.copy(self.premium_dep_tx)
         self.premium_dep_ser = self.premium_dep_tx.serialize()
 
     # def make_guarantee_deposit_tx(

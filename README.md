@@ -1,5 +1,7 @@
-# ABCD
-Bob cheats:
+# Different scenarios of ABCD
+ABCD paper: <http://sina.sharif.edu/~mtefagh/papers/ABCD.pdf>
+## Pointers to the transactions:
+### Bob cheats:
 
 (BTC) Alice FUNDING: 47eac6f84a93f4ed182803a5cb392e14bbc6951b13d43bad936516728ed8fd8e <br />
 (BTC) Bob FUNDING: 4770fc9dd5553f42c2745cb9544849e3fd495dbf50ed0501ee6889e9ba693b71 <br />
@@ -12,7 +14,7 @@ Bob cheats:
 (BTC) Bob RETURN PRINCIPAL BACK (Bob CHEATS): 7de97eea2b6f1759d25477ea8c72c9b11ba3e760337c00a36bf594fabf7cd778 <br />
 (BCY) Carol RETURN REDEMPTION BACK (Bob CHEATS): 56b0a722b09d71dc9be9e5ceb414ffc471dd0aeea7d6da5667d5f4a9af76d9c6 <br />
 
-Alice defaults:
+### Alice defaults:
 
 (BTC) Alice FUNDING: d495860263729085fffd6ef5c26fecd8e639cfc51fdb33e00b1570a90160ca0f <br />
 (BTC) Bob FUNDING: f3aab5e4bb25cdc768017e85a344458aa7af5087aeade67789f6f4d93c1669aa <br />
@@ -22,7 +24,7 @@ Alice defaults:
 (BTC) Bob RETURN PRINCIPAL BACK (Alice DEFAULTS): 0026cf59a64314c89b6fb36225eef3af21b66f46b5e568846b522b5a41107b61 <br />
 (BTC) ALICE DEFAULTS: 12d48a1b2035616d284e94a66e3784037e42d761abc977b95185bb0084e9f5b7 <br />
 
-Bob defaults:
+### Bob defaults:
 
 (BTC) Alice FUNDING: eedb2498e83768eb8c4210642b215b624dd6c014ac67f76237ca6cf103dcd90f <br />
 (BTC) Bob FUNDING: 71dfe5fa3494d6cfc91a4d9cc4e946c7a3eaa7badbcd64e91ddc07eb7e8695f7 <br />
@@ -31,14 +33,14 @@ Bob defaults:
 (BTC) Alice BOB DEFAULTS: 3f3d11d85656d679b2595fa15f422a70ece2224c273e1db0dfb13a45d5d4dc97 <br />
 (BTC) Bob ALICE DEFAULTS: a3d4fe545455439a683383bba8083f21b5e8c744f509bf1880cbb9fa0c48563c <br />
 
-Alice does not reveal funding key:
+### Alice does not reveal funding key:
 
 (BTC) Alice FUNDING: 1c2b1b47b3dafd90ffa6d1100dd17420e1af019007983a67106fc15de7ac7f1d <br />
 (BTC) Bob FUNDING: dbe677809d0e510bc03bfce633934646995e6d45335ff3bd3166aca373ce9865 <br />
 (BTC) Alice REFUND: f3c70d9c08683c816f396c7b025daa742c61f01f3e32fe0327ce354bed72221f <br />
 (BTC) Bob REFUND: 929341f99e4769a22b6d047467c611e9366fb7db8b7b5dc8a36d20a261e04ae6 <br />
 
-All partys cooperate:
+### All parties cooperate:
 
 (BTC) Alice FUNDING: 8f667ccf689108c814054baf3a979beca5704329432cabff8e56b2b7ead2c1fc <br />
 (BTC) Bob FUNDING: cacfdeb0cb146c3b9f1f54c813a38683386d9baeeaddc7dec7ff80e002b2fe8d <br />

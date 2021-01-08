@@ -120,6 +120,7 @@ def unregister(websocket):
     USERS.remove(websocket)
     # await notify_users()
 
+
 def notify_new_trx(trx):
     return json.dumps({"type": "new-transaction", "value": trx["value"], "id": trx["id"], 'url': trx['url']})
 
@@ -240,4 +241,3 @@ async def counter(websocket, path):
 # asyncio.ensure_future(main())
 # asyncio.get_event_loop().run_forever()
 #
-

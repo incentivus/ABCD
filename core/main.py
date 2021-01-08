@@ -1,10 +1,15 @@
 from core.bondbuyer import *
+from core.bondissuer import *
 from core.exchange import *
+from core.participant import wait_until_next_interrupt
 from website.webapp import *
 import asyncio
+from bitcoinutils.setup import setup as btcsetup
+from litecoinutils.setup import setup as ltcsetup
+from bitcoinutils.constants import SIGHASH_ANYONECANPAY
 
-
-setup('testnet')
+btcsetup('testnet')
+ltcsetup('testnet')
 
 # secret used for HTLCs
 ALICE_SECRET = Secret("thisIsASecretPasswordForAlice")
@@ -13,12 +18,12 @@ BOB_SECRET = Secret("thisIsASecretPasswordForBob")
 # secret wifs
 ALICE = BondIssuer(wif='cPz2tG7YN1BD6WT4R65J5LnTUtZqgYMBaWGerp75GF2nP14aKtyW',
                    funding_secret=ALICE_SECRET, network="btc-test3", name="Alice")
-ALICE.load_keys(wif='BrhJV1kuGHxiL39kFFkRP5jj9okys645Jsp9DK9jvKdYhZCpMEZZ', network="bcy-tst")
+ALICE.load_keys(wif='cMahea7zqjxrtgAbB7LSGbcQUr1uX1ojuat9jZodMN87JcbXMTcA', network="ltc-tst")
 
 BOB = BondBuyer(wif='cQVqxrx5bPLNnpTv87uWnfJ4dZawnKchKDLFkYdA5tZYRmAzoV5G',
                 network="btc-test3", principal_secret=BOB_SECRET, name="Bob")
 
-CAROL = Exchange(wif="Bqj17XDLkQA11SJcihX3qwwVC4PJWfQXxGh8V2gM1C8RCs5zxooi", network="bcy-tst", name="Carol")
+CAROL = Exchange(wif="cTqgxFHmnGyRAPfYDuP9wRiKh28zX4w8DazpD8jgwfSTZoTQ2qmC", network="ltc-tst", name="Carol")
 CAROL.load_keys(wif='cTTf7ZSZRGP5RijYy1M5Tgd2RwdnxtWJqgFwKAyThAumn7s4s2GQ', network="btc-test3")
 
 
@@ -91,7 +96,8 @@ async def main():
 
     ################################### ALICE refund section ###################################
     # Alice creates refund
-    alice_refund_tx = ALICE.make_refund_tx(funding_utxo=alice_funding_utxo, locktime=alice_refund_locktime)
+    alice_refund_tx = ALICE.make_refund_tx(funding_utxo=alice_funding_utxo, locktime=alice_refund_locktime,
+                                           network="btc-test3")
     await ALICE.new_message("Refund transaction created.")
     # Alice signs refund
     alice_sig = ALICE.make_segwit_signature(
@@ -100,7 +106,7 @@ async def main():
         alice_funding_utxo
     )
     await ALICE.new_message("Refund transaction is signed.")
-    ALICE.commit_refund(alice_sig, funding_script=alice_funding_utxo.redeem_script.to_hex())
+    ALICE.commit_refund(alice_sig, funding_script=alice_funding_utxo.redeem_script.to_hex(), network="btc-test3")
     #############################################################################################
 
     # Bob creates funding 1
@@ -123,10 +129,9 @@ async def main():
     print(BOB.funding_ser)
     await BOB.new_message("Funding transaction is signed.")
 
-
     ################################### BOB refund section ###################################
     # Bob creates refund
-    bob_refund_tx = BOB.make_refund_tx(funding_utxo=bob_funding_utxo, locktime=bob_refund_locktime)
+    bob_refund_tx = BOB.make_refund_tx(funding_utxo=bob_funding_utxo, locktime=bob_refund_locktime, network="btc-test3")
     await BOB.new_message("Refund transaction is created.")
 
     # Bob signs refund
@@ -137,7 +142,7 @@ async def main():
     )
     await BOB.new_message("Refund transaction is signed.")
 
-    BOB.commit_refund(bob_sig, funding_script=bob_funding_utxo.redeem_script.to_hex())
+    BOB.commit_refund(bob_sig, funding_script=bob_funding_utxo.redeem_script.to_hex(), network="btc-test3")
     ##########################################################################################
 
     # Bob creates funding 2
@@ -219,7 +224,7 @@ async def main():
     bob_margin_dep_tx, bob_margin_dep_utxo = \
         ALICE.make_margin_deposit_tx(
             bob_pubkey=BOB.public_key,
-            utxo=bob_funding_utxo,   # todo: this has to be Bob's
+            utxo=bob_funding_utxo,  # todo: this has to be Bob's
             fee=DEFAULT_TX_FEE
         )
     await BOB.new_message("Margin deposition transaction is created.")
@@ -253,8 +258,8 @@ async def main():
         bob_margin_dep_utxo
     )
     await ALICE.new_message("Bob defaults transaction is signed.")
-    ALICE.commit_defaults(alice_sig, prev_script=bob_margin_dep_utxo.redeem_script.to_hex())
-##########################################################################################
+    ALICE.commit_defaults(alice_sig, prev_script=bob_margin_dep_utxo.redeem_script.to_hex(), network="btc-test3")
+    ##########################################################################################
 
     # Bob creates premium dep
     alice_premium_dep_tx, alice_premium_dep_utxo = \
@@ -352,7 +357,8 @@ async def main():
     await ALICE.new_message("Redemption transaction is signed.")
 
     await ALICE.broadcast_transaction(ALICE.funding_ser,
-                                      transaction_name="FUNDING", send_to_websocket=True, txid=ALICE.funding_tx.get_txid())
+                                      transaction_name="FUNDING", send_to_websocket=True,
+                                      txid=ALICE.funding_tx.get_txid())
 
     await ALICE.update_balance("Nothing (Premium is locked)")
 
@@ -360,7 +366,8 @@ async def main():
     await BOB.broadcast_transaction(BOB.funding_ser,
                                     transaction_name="FUNDING", send_to_websocket=True, txid=BOB.funding_tx.get_txid())
     await BOB.broadcast_transaction(BOB.funding_2_ser,
-                                    transaction_name="FUNDING 2", send_to_websocket=True, txid=BOB.funding_2_tx.get_txid())
+                                    transaction_name="FUNDING 2", send_to_websocket=True,
+                                    txid=BOB.funding_2_tx.get_txid())
     await BOB.update_balance("Nothing (Margin is locked)")
 
     await BOB.new_message("Funding transaction is broadcasted.")
@@ -380,7 +387,8 @@ async def main():
         await ALICE.new_message("Refund transaction is broadcasted.")
 
         await BOB.broadcast_transaction(BOB.refund_ser, "REFUND", send_to_websocket=True, txid=BOB.refund_tx.get_txid())
-        await BOB.broadcast_transaction(BOB.refund_2_ser, "REFUND 2", send_to_websocket=True, txid=BOB.refund_2_tx.get_txid())
+        await BOB.broadcast_transaction(BOB.refund_2_ser, "REFUND 2", send_to_websocket=True,
+                                        txid=BOB.refund_2_tx.get_txid())
 
         await BOB.update_balance("Margin (Margin returned back)")
 
@@ -453,27 +461,27 @@ async def main():
     BOB.commit_second_HTLC_output(bob_sig_second_htlc_output, network="btc-test3")
 
     carol_HTLC_tx, carol_HTLC_utxo = CAROL.make_HTLC(utxo=carol_utxo_to_spend,
-                                                     recipient_pubkeyhash=ALICE.pubkey_hash(network="bcy-tst"),
+                                                     recipient_pubkeyhash=ALICE.pubkey_hash(network="ltc-tst"),
                                                      bob_principal_utxo=bob_principal_utxo,
                                                      locktime=carol_htlc_locktime)
     await CAROL.new_message("HTLC transaction is created. The other parties HTLC is visible.")
 
     CAROL.commit_HTLC()
-    await CAROL.broadcast_transaction(CAROL.HTLC_ser, network="bcy-tst", transaction_name="HTLC",
+    await CAROL.broadcast_transaction(CAROL.HTLC_ser, network="ltc-tst", transaction_name="HTLC",
                                       send_to_websocket=True, txid=CAROL.HTLC_tx.get_txid())
     await CAROL.update_balance("Nothing (HTLC amount is locked)")
 
     await CAROL.new_message("HTLC transaction is broadcasted.")
 
-    carol_htlc_output_tx = CAROL.make_second_HTLC_output_tx(utxo=carol_HTLC_utxo, network="bcy-tst",
+    carol_htlc_output_tx = CAROL.make_second_HTLC_output_tx(utxo=carol_HTLC_utxo, network="ltc-tst",
                                                             locktime=carol_htlc_locktime)
     await CAROL.new_message("HTLC self-output transaction is created. For the case of not revealing leader key.")
 
-    carol_sig_htlc_output = CAROL.secret_key_BCY.sign_input(tx=carol_htlc_output_tx, txin_index=0,
+    carol_sig_htlc_output = CAROL.secret_key_LTC.sign_input(tx=carol_htlc_output_tx, txin_index=0,
                                                             script=carol_HTLC_utxo.redeem_script)
     await CAROL.new_message("HTLC self-output transaction is signed.")
 
-    CAROL.commit_second_HTLC_output(carol_sig_htlc_output, network="bcy-tst")
+    CAROL.commit_second_HTLC_output(carol_sig_htlc_output, network="ltc-tst")
 
     await ask_alice_defaults()
     while True:
@@ -500,8 +508,13 @@ async def main():
 
         await BOB.new_message("Guarantee withdrawal transaction is broadcasted.", end=True)
 
-        exit(0)
+        await CAROL.broadcast_transaction(CAROL.second_HTLC_output_ser, network="ltc-tst",
+                                          transaction_name="RETURN HTLC BACK", send_to_websocket=True,
+                                          txid=CAROL.second_HTLC_output_tx.get_txid())
+        await CAROL.update_balance("HTLC amount (HTLC amount returned back)")
 
+        await CAROL.new_message("HTLC self-output transaction is broadcasted.", end=True)
+        exit(0)
 
     # Alice fulfills redemption
     alice_redm_tx, alice_redm_utxo = ALICE.fulfill_redemption(
@@ -517,8 +530,8 @@ async def main():
                                       send_to_websocket=True, txid=ALICE.redemption_tx.get_txid())
     await ALICE.update_balance("Nothing (Payback is locked)")
 
-    alice_second_HTLC_output_tx = ALICE.make_second_HTLC_output_tx(utxo=ALICE.get_redemption_utxo(),
-                                                                   network="btc-test3", locktime=alice_redemption_locktime)
+    alice_second_HTLC_output_tx = ALICE.make_second_HTLC_output_tx(utxo=ALICE.get_redemption_utxo(), network="btc-test3"
+                                                                   , locktime=alice_redemption_locktime)
     await ALICE.new_message("HTLC self-output transaction is created. For the case of not revealing leader key.")
 
     alice_sig_second_htlc_output = ALICE.secret_key.sign_input(tx=alice_second_HTLC_output_tx, txin_index=0,
@@ -549,7 +562,7 @@ async def main():
 
         await BOB.new_message("Principal self-output transaction is broadcasted.")
 
-        await CAROL.broadcast_transaction(CAROL.second_HTLC_output_ser, network="bcy-tst",
+        await CAROL.broadcast_transaction(CAROL.second_HTLC_output_ser, network="ltc-tst",
                                           transaction_name="RETURN HTLC BACK", send_to_websocket=True,
                                           txid=CAROL.second_HTLC_output_tx.get_txid())
         await CAROL.update_balance("HTLC amount (HTLC amount returned back)")
@@ -569,11 +582,11 @@ async def main():
 
     await BOB.new_message("Redemption output transaction is created and broadcasted. The leader key is revealed")
 
-    alice_HTLC_output_tx = ALICE.make_HTLC_output_tx(utxo=carol_HTLC_utxo, network="bcy-tst")
-    alice_sig_htlc_output = ALICE.secret_key_BCY.sign_input(tx=alice_HTLC_output_tx, txin_index=0,
+    alice_HTLC_output_tx = ALICE.make_HTLC_output_tx(utxo=carol_HTLC_utxo, network="ltc-tst")
+    alice_sig_htlc_output = ALICE.secret_key_LTC.sign_input(tx=alice_HTLC_output_tx, txin_index=0,
                                                             script=carol_HTLC_utxo.redeem_script)
-    ALICE.commit_HTLC_output(alice_sig_htlc_output, BOB_SECRET, network="bcy-tst")
-    await ALICE.broadcast_transaction(ALICE.HTLC_output_ser, network="bcy-tst", transaction_name="HTLC OUTPUT",
+    ALICE.commit_HTLC_output(alice_sig_htlc_output, BOB_SECRET, network="ltc-tst")
+    await ALICE.broadcast_transaction(ALICE.HTLC_output_ser, network="ltc-tst", transaction_name="HTLC OUTPUT",
                                       send_to_websocket=True, txid=ALICE.HTLC_output_tx.get_txid())
     await ALICE.update_balance("HTLC amount")
 
@@ -591,8 +604,8 @@ async def main():
 
 
 if __name__ == '__main__':
-    print(BOB.public_key.get_address().to_string())
-    exit(0)
+    # print(BOB.public_key.get_address().to_string())
+    # exit(0)
     start_server = websockets.serve(counter, "0.0.0.0", 6789)
     ALICE.set_websocket(start_server)
     BOB.set_websocket(start_server)
@@ -600,4 +613,3 @@ if __name__ == '__main__':
     asyncio.get_event_loop().run_until_complete(start_server)
     asyncio.ensure_future(main())
     asyncio.get_event_loop().run_forever()
-

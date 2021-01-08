@@ -7,7 +7,7 @@ def int_to_le_hex(number: int) -> str:
 
 
 class Secret:
-    secret: bytes
+    # secret: bytes
 
     def __init__(self, secret: str):
         self.secret = secret.encode('utf8')
