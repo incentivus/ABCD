@@ -251,7 +251,7 @@ border-color: white;
         transactionBox = document.querySelector('.transaction-box'),
         sampleMsg = document.querySelector('#samMessage'),
         sampleTrx = document.querySelector('#samTransaction'),
-        websocket = new WebSocket("ws://37.152.182.109:6789/");
+        websocket = new WebSocket("ws://127.0.0.1:6789/");
         var qs;
 <!--    minus.onclick = function (event) {-->
 <!--        websocket.send(JSON.stringify({action: 'minus'}));-->
@@ -283,7 +283,7 @@ border-color: white;
                 msg.innerHTML = data.id + "." + data.value;
                 break;
             case 'question':
-                qs = data
+                qs = data;
                 var newMsg = sampleMsg.cloneNode(true);
                 newMsg.innerHTML = data.id + "." + data.value;
                 newMsg.removeAttribute("hidden");

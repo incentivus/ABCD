@@ -6,7 +6,7 @@ app = Flask(__name__, static_url_path='/')
 
 @app.route('/')
 def send_js():
-        return send_from_directory("/home/ubuntu/ABCD/merged", "index.html")
+        return send_from_directory("", "index.html")
 
 
 if __name__ == "__main__":
