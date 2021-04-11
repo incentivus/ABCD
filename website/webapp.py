@@ -62,11 +62,15 @@ def notify_update_balance(msg, party):
     return notify_users(json.dumps(message))
 
 
+def notify_finish_commitment():
+    return notify_users(json.dumps({"type": "init"}))
+
+
 async def ask_alice_reveals():
     if USERS:  # asyncio.wait doesn't accept an empty list
         await asyncio.wait([
             user.send(json.dumps(create_new_message("question", "alice",
-                                                    "Would you want to reveal funding key?")))
+                                                    "Would you want to start the protocol?")))
             for user in USERS])
 
 
@@ -78,11 +82,11 @@ async def ask_bob_defaults():
             for user in USERS])
 
 
-async def ask_bob_cheats():
+async def ask_bob_unlocks():
     if USERS:  # asyncio.wait doesn't accept an empty list
         await asyncio.wait([
             user.send(json.dumps(create_new_message("question", "bob",
-                                                    "Would you want to cheat or not?")))
+                                                    "Would you want to unlock the debt or not?")))
             for user in USERS])
 
 
@@ -175,7 +179,7 @@ async def counter(websocket, path):
         async for message in websocket:
             data = json.loads(message)
             if data["type"] == "answer":
-                if data["question"] == "Would you want to reveal funding key?":
+                if data["question"] == "Would you want to start the protocol?":
                     await notify_users(json.dumps({"type": "btn-remove", "party": "alice"}))
                     await notify_update_msg(update_msg(int(data["id"]), data))
                     asyncState.alice_reveals = data["ans"]
@@ -190,10 +194,10 @@ async def counter(websocket, path):
                     await notify_update_msg(update_msg(int(data["id"]), data))
                     asyncState.alice_defaults = data["ans"]
                     continue
-                elif data["question"] == "Would you want to cheat or not?":
+                elif data["question"] == "Would you want to unlock the debt or not?":
                     await notify_users(json.dumps({"type": "btn-remove", "party": "bob"}))
                     await notify_update_msg(update_msg(int(data["id"]), data))
-                    asyncState.bob_cheats = data["ans"]
+                    asyncState.bob_unlocks = data["ans"]
                     continue
                 else:
                     continue

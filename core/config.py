@@ -26,11 +26,12 @@ bob_guarantee_locktime = payback_preiod + btc_height
 
 asyncState = type('', (), {})()
 asyncState.start = ['T', 'F', 'P'][2]
-asyncState.alice_reveals = ['T', 'F', 'P'][2]  # True False Pending
+asyncState.alice_reveals = ['T', 'F', 'P'][0]  # True False Pending
 asyncState.bob_defaults = ['T', 'F', 'P'][2]
 asyncState.alice_defaults = ['T', 'F', 'P'][2]
-asyncState.bob_cheats = ['T', 'F', 'P'][2]
+asyncState.bob_unlocks = ['T', 'F', 'P'][2]
 asyncState.next = ['T', 'F', 'P'][2]
+asyncState.commitment = ['T', 'F', 'P'][2]
 
 alice_utxo_to_spend = UTXO(
     network="btc-test3",

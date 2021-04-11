@@ -19,32 +19,52 @@
 <p hidden id="samMessage" class="card-text message">msg</p>
 <div hidden id="samTransaction" class="transaction"> <a href='#' target="_blank">trx</a> </div>
 <div id="myModal" class="modal">
-    <div class="modal-content" style="height: 100px;">
+    <div class="modal-content" style="height: 100px; background-color: rgb(42, 58, 80);">
         <button id="myBtn" class="button" style="vertical-align:middle"><span>Click Here to start the scenario </span></button>
 <!--        <button id="myBtn" class="button" style="height: 500px;">Click to start the scenario</button>-->
 <!--        <button id="myBtn" class="btnn" style="height: 500px;">Open Modal</button>-->
     </div>
 </div>
 
-    <div class="row">
-        <div class="col-sm transaction-box">
-        </div>
-    </div>
+<!--    <div class="panel-group" id="details">-->
+<!--        <div class="panel panel-default">-->
+<!--          <div class="panel-heading">-->
+<!--            <h4 class="panel-title" style="width: 100%;">-->
+<!--              <a data-toggle="collapse" href="#collapse1" class="text-center">Collapsible list group</a>-->
+<!--            </h4>-->
+<!--          </div>-->
+<!--          <div id="collapse1" class="panel-collapse collapse">-->
+<!--            <ul class="list-group">-->
+<!--              <li class="list-group-item">One</li>-->
+<!--              <li class="list-group-item">Two</li>-->
+<!--              <li class="list-group-item">Three</li>-->
+<!--            </ul>-->
+<!--            <div class="panel-footer">Footer</div>-->
+<!--          </div>-->
+<!--        </div>-->
+<!--    </div>-->
+<!--    <div class="row">-->
+<!--        <h1>Header</h1>-->
+<!--    </div>-->
+<div class="header">
+    <h1 class="head-title"><span>A</span><span>B</span><span>C</span><span>D</span> live demo</h1>
+<!--  <p>My supercool header</p>-->
+</div>
     <div class="row">
         <div class="col-sm-4 ">
-            <div class="card alice">
-                <div class="card-body ">
+            <div class="card alice party-box">
+                <div class="card-body">
                     <h5 class="card-title text-center heading">Alice</h5>
                         <div id="alice-msg-box"></div>
 
                 </div>
                     <a hidden href="#" class="btn btn-primary card-footer btnqs" id="alice-yes">Yes</a>
                     <a hidden href="#" class="btn btn-primary card-footer btnqs" id="alice-no">No</a>
-                <div id="alice-balance" class="card-footer"></div>
+                <div id="alice-balance" class="card-footer balance"></div>
             </div>
         </div>
         <div class="col-sm-4 ">
-            <div class="card bob">
+            <div class="card bob party-box">
                 <div class="card-body ">
                     <h5 class="card-title text-center heading">Bob</h5>
                         <div id="bob-msg-box"></div>
@@ -52,11 +72,11 @@
                 </div>
                     <a hidden href="#" class="btn btn-primary btnqs card-footer" id="bob-yes">Yes</a>
                     <a hidden href="#" class="btn btn-primary btnqs card-footer" id="bob-no">No</a>
-                <div id="bob-balance" class="card-footer"></div>
+                <div id="bob-balance" class="card-footer balance"></div>
             </div>
         </div>
         <div class="col-sm-4 ">
-            <div class="card carol">
+            <div class="card carol party-box">
                 <div class="card-body ">
                     <h5 class="card-title text-center heading">Carol</h5>
                         <div id="carol-msg-box"></div>
@@ -64,24 +84,53 @@
                 </div>
                     <a hidden href="#" class="btn btn-primary btnqs card-footer" id="carol-yes">Yes</a>
                     <a hidden href="#" class="btn btn-primary btnqs card-footer" id="carol-no">No</a>
-                <div id="carol-balance" class="card-footer"></div>
+                <div id="carol-balance" class="card-footer balance"></div>
             </div>
         </div>
     </div>
     <div class="row">
         <div class="col-sm-5"></div>
         <div class="col-sm-4">
-            <button class="next-button" id="next">Next Step</button>
+            <button class="next-button" id="next">Run Commitment Phase</button>
         </div>
+    </div>
+
+    <div class="row">
+        <div class="col-sm transaction-box"><span>Transactions</span>
+        </div>
+    </div>
+    <div id="message" onclick="$('#message').fadeOut(600)" hidden>
+      <div class="popup">
+          <div class="span">Commitment phase finished. </div>
+          <div class="span"> Starting Initialization phase.</div>
+      </div>
     </div>
 </body>
 <style>
+body {
+font-family: Arial, Helvetica, sans-serif;
+    min-height: 100vh;
+    background-position: 0px -30vh;
+    background-repeat: no-repeat;
+    background-image: radial-gradient(50% 50% at 50% 50%, rgba(39, 176, 230, 0.1) 0%, rgba(39, 176, 230, 0) 100%);
 
-    body {font-family: Arial, Helvetica, sans-serif;}
+    color: rgb(255, 255, 255);
+    background-color: rgb(13, 4, 21);
+}
+.party-box{
+    margin: 10px;
+    position: relative;
+    max-width: 420px;
+    width: 100%;
+    background: rgba(32, 34, 49, 0.9);
+    box-shadow: rgb(0 0 0 / 1%) 0px 0px 1px, rgb(0 0 0 / 4%) 0px 4px 8px, rgb(0 0 0 / 4%) 0px 16px 24px, rgb(0 0 0 / 1%) 0px 24px 32px;
+    border-radius: 10px;
+}
+<!--    body {font-family: Arial, Helvetica, sans-serif;}-->
 
-    .balance{
-    width: 110%;
-    }
+<!--    .balance{-->
+<!--    width: 110%;-->
+<!--    }-->
 
     /* The Modal (background) */
     .modal {
@@ -103,7 +152,7 @@
       background-color: #fefefe;
       margin: auto;
       padding: 20px;
-      border: 1px solid #888;
+      border: 1px solid rgb(42, 58, 80);
       width: 80%;
     }
 
@@ -122,8 +171,15 @@
       cursor: pointer;
     }
      .transaction-box {
-        margin: 30px;
-        border: 2px solid red;
+         margin: 30px;
+
+    border-radius: 5px;
+    border: 3px solid;
+<!--    border: 2px solid red;-->
+<!--    position: fixed;-->
+    bottom: 0;
+    width: 95%;
+    padding: 10px;
       }
       .transaction {
         color: black;
@@ -147,18 +203,26 @@
 <!--        box-pack: center;-->
 <!--        box-align: center;-->
       }
+    .header {
+            padding: 10px;
+            text-align: center;
+<!--            background: #1abc9c;-->
+            color: #b2026e;
+            font-family: Inter, sans-serif;
+            font-size: 30px;
+       }
       .heading {
         text-align: center;
         font-size: 30px;
       }
       .alice{
-          border: 2px solid rgb(255, 0, 102);
+          border: 5px solid #0062cce8;
       }
       .bob{
-        border: 2px solid rgb(0, 0, 255);
+        border: 5px solid #0062cce8;
       }
       .carol{
-        border: 2px solid rgb(0, 255, 0);
+        border: 5px solid #0062cce8;
       }
       .message{
         text-align: left;
@@ -170,13 +234,13 @@
 <!--        border-radius: 5px;-->
 <!--      }-->
 .message {
-  border-bottom: 1px dashed black;
-  margin-bottom: 10px;
+  border-bottom: 2px dashed #0062cce8;
+  margin-bottom: 15px;
 }
 .button {
   display: inline-block;
   border-radius: 4px;
-  background-color: #f4511e;
+  background-color: rgb(0, 148, 236);
   border: none;
   color: #FFFFFF;
   text-align: center;
@@ -217,16 +281,28 @@
 }
 
 .btnqs{
-color: black;
-background-color: white;
-	margin-right: 10px;
-		margin-left: 10px;
-border-color: white;
+<!--color: black;-->
+<!--background-color: white;-->
+<!--	margin-right: 10px;-->
+<!--		margin-left: 10px;-->
+<!--border-color: white;-->
+color: #00c4ff;
+    background-color: #11091d;
+    margin-right: 10px;
+    margin-left: 10px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    border-color: white;
 }
 
 .next-button {
-  background-color: #4CAF50; /* Green */
-  border: none;
+
+
+  border-radius: 10px;
+  border: 1px solid rgb(42, 58, 80);;
+  padding: 20px;
+
+  background-color: rgb(42, 58, 80); /* Green */
   color: white;
   padding: 15px 32px;
   text-align: center;
@@ -238,9 +314,65 @@ border-color: white;
   -webkit-transition-duration: 0.4s; /* Safari */
   transition-duration: 0.4s;
 }
+.balance {
 
+    color: #B93CF6;
+    background-color: rgba(0,0,0,.5);
+    text-align: center;
+<!--    font-weight: bold;-->
+}
 .next-button:hover {
   box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24),0 17px 50px 0 rgba(0,0,0,0.19);
+}
+.head-title span {
+  color: #b2026e;
+}
+.head-title span:nth-child(1) {
+  color: #dc0489;
+}
+.head-title span:nth-child(3) {
+  color: #0070ad;
+}
+.head-title span:nth-child(4) {
+  color: #31a9ea;
+}
+div.popup {
+  position: fixed;
+  bottom: 1em;
+  left: 1em;
+  width: 300px;
+  height: 120px;
+  padding: 2em;
+  max-width: 24em;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  overflow: hidden;
+  box-sizing: border-box;
+  font-family: Helvetica,Calibri;,Arial,sans-serif;
+  font-size: 16px;
+  line-height: 1.5em;
+  display: -ms-flexbox;
+  display: flex;
+  -ms-flex-wrap: nowrap;
+  flex-wrap: nowrap;
+  z-index: 9999;
+  /*border: 3px solid #73AD21;*/
+  color: rgb(214, 214, 214);
+  background-color: rgb(60, 64, 77);
+  opacity: 1;
+  transition: opacity 1s ease;
+  border-radius:4px;
+  border:2px solid #11eb1c;
+  color:#0ef03b;
+  cursor: pointer;
+}
+
+div.popup.span{
+  display: block;
+  margin-bottom: 1em;
+  font-family: Helvetica, Calibri, ;Arial, sans-serif;
+  font-style: normal;
+  text-align: left;
 }
 
 </style>
@@ -311,6 +443,12 @@ border-color: white;
             case 'finish':
                 var btn = document.getElementById("next")
                 btn.innerHTML = "Scenario is finished."
+                break;
+
+            case 'init':
+                var btn = document.getElementById("next")
+                btn.innerHTML = "Next Step"
+                $("#message").removeAttr('hidden');
                 break;
 
             case 'late':
