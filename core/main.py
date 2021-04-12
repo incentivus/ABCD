@@ -541,7 +541,7 @@ async def main():
                                       send_to_websocket=True, txid=ALICE.redemption_tx.get_txid())
     # await ALICE.update_balance("Nothing (Payback is locked)")
     await BOB.update_balance("Premium + Locked Payback")
-    await ALICE.new_message("Payback locks for Bob.")
+    await ALICE.new_message("Payback locked for Bob.")
 
     alice_second_HTLC_output_tx = ALICE.make_second_HTLC_output_tx(utxo=ALICE.get_redemption_utxo(), network="btc-test3"
                                                                    , locktime=alice_redemption_locktime)
